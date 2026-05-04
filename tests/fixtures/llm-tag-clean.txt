@@ -1,0 +1,1 @@
+{"candidates": ["Javier Milei"], "category": "gobierno", "relevance": 0.65}
