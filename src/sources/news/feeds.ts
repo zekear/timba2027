@@ -7,11 +7,11 @@ export interface NewsFeed {
 export const FEEDS: NewsFeed[] = [
   { source: 'clarin', url: 'https://www.clarin.com/rss/politica/', active: true },
   { source: 'lanacion', url: 'https://www.lanacion.com.ar/arc/outboundfeeds/rss/category/politica/?outputType=xml', active: true },
-  { source: 'infobae', url: 'https://www.infobae.com/feeds/rss/sections/politica/', active: true },
-  { source: 'pagina12', url: 'https://www.pagina12.com.ar/rss/secciones/el-pais/notas', active: true },
+  { source: 'infobae', url: 'https://www.infobae.com/feeds/rss/sections/politica/', active: false },
+  { source: 'pagina12', url: 'https://www.pagina12.com.ar/rss/secciones/el-pais/notas', active: false },
   { source: 'cenital', url: 'https://www.cenital.com/feed/', active: true },
-  { source: 'letrap', url: 'https://www.letrap.com.ar/rss/politica.xml', active: true },
-  { source: 'ambito', url: 'https://www.ambito.com/rss/politica.xml', active: true },
+  { source: 'letrap', url: 'https://www.letrap.com.ar/rss/politica.xml', active: false },
+  { source: 'ambito', url: 'https://www.ambito.com/rss/politica.xml', active: false },
   { source: 'perfil', url: 'https://www.perfil.com/feed/politica', active: true },
 ];
 
