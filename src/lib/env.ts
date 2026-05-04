@@ -14,6 +14,7 @@ const schema = z.object({
   POLYMARKET_POLL_INTERVAL_MIN: z.coerce.number().int().positive().default(15),
   MARKET_MOVE_THRESHOLD_PCT: z.coerce.number().positive().default(2),
   NEWS_POLL_INTERVAL_MIN: z.coerce.number().int().positive().default(15),
+  POLLS_POLL_INTERVAL_HOURS: z.coerce.number().int().positive().default(6),
   X_API_BEARER_TOKEN: z.string().optional(),
   X_API_BASE: z.string().url().default('https://api.twitter.com/2'),
 });

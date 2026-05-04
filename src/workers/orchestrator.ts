@@ -6,6 +6,7 @@ import { runPolymarketIngest } from '../sources/polymarket/ingest.js';
 import { detectMoves } from '../sources/polymarket/moves.js';
 import { runNewsIngest } from '../sources/news/ingest.js';
 import { runNewsTagger } from '../sources/news/tagger.js';
+import { runPollsIngest } from '../sources/polls/ingest.js';
 
 /**
  * Wrapper para que un cron job no se solape con sí mismo si tarda más de
@@ -55,10 +56,14 @@ async function main() {
   // News tagger cada 5 min (batches de 20)
   cron.schedule('*/5 * * * *', singleflight('news-tagger', runNewsTagger));
 
+  // Polls cada N horas (X API es caro, no apuramos)
+  cron.schedule(`0 */${env.POLLS_POLL_INTERVAL_HOURS} * * *`, singleflight('polls-ingest', runPollsIngest));
+
   logger.info(
     {
       polymarket_min: env.POLYMARKET_POLL_INTERVAL_MIN,
       news_min: env.NEWS_POLL_INTERVAL_MIN,
+      polls_hours: env.POLLS_POLL_INTERVAL_HOURS,
     },
     'orchestrator: schedules registered',
   );
