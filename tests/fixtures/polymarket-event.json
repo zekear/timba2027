@@ -1,0 +1,470 @@
+{
+  "id": "435390",
+  "slug": "argentina-presidential-election-winner",
+  "title": "Argentina Presidential Election Winner",
+  "description": "A presidential election scheduled to be held in Argentina on October 24, 2027.\n\nThis market will resolve according to the listed candidate who wins the next Argentinian Presidential election. \n\nThis market includes any potential second round. \n\nIf the results are not known definitively by October 31, 2028, 11:59 PM ET, this market will resolve to \"Other\".\n\nThis market will resolve based on the results of this election, as indicated by a consensus of credible reporting. If there is ambiguity, this market will resolve solely based on official results as reported by Argentina government sources, including the Cámara Nacional Electoral (https://www.electoral.gob.ar/nuevo/index.php) and the Dirección Nacional Electoral (https://www.argentina.gob.ar/dine).",
+  "endDate": "2027-10-24T00:00:00Z",
+  "closed": false,
+  "archived": false,
+  "markets": [
+    {
+      "id": "2127309",
+      "question": "Will Javier Milei win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "outcomePrices": "[\"0.515\", \"0.485\"]",
+      "volume24hr": 5704.66552,
+      "groupItemTitle": "Javier Milei"
+    },
+    {
+      "id": "2127311",
+      "question": "Will Esteban Bullrich win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "outcomePrices": "[\"0.0045\", \"0.9955\"]",
+      "volume24hr": 757.169666,
+      "groupItemTitle": "Esteban Bullrich"
+    },
+    {
+      "id": "2127313",
+      "question": "Will Sergio Massa win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "outcomePrices": "[\"0.0515\", \"0.9485\"]",
+      "volume24hr": 1320.803904,
+      "groupItemTitle": "Sergio Massa"
+    },
+    {
+      "id": "2127315",
+      "question": "Will Facundo Manes win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "outcomePrices": "[\"0.0055\", \"0.9945\"]",
+      "volume24hr": 785.1455,
+      "groupItemTitle": "Facundo Manes"
+    },
+    {
+      "id": "2127317",
+      "question": "Will Victoria Villarruel win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "outcomePrices": "[\"0.051\", \"0.949\"]",
+      "volume24hr": 911.5597799999999,
+      "groupItemTitle": "Victoria Villarruel"
+    },
+    {
+      "id": "2127319",
+      "question": "Will Dante Gebel win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "outcomePrices": "[\"0.0775\", \"0.9225\"]",
+      "volume24hr": 1441.387693,
+      "groupItemTitle": "Dante Gebel"
+    },
+    {
+      "id": "2127321",
+      "question": "Will Person B win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person B"
+    },
+    {
+      "id": "2127323",
+      "question": "Will Person D win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person D"
+    },
+    {
+      "id": "2127325",
+      "question": "Will Person F win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person F"
+    },
+    {
+      "id": "2127327",
+      "question": "Will Person H win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person H"
+    },
+    {
+      "id": "2127329",
+      "question": "Will Person J win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person J"
+    },
+    {
+      "id": "2127331",
+      "question": "Will Person L win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person L"
+    },
+    {
+      "id": "2127333",
+      "question": "Will Person N win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person N"
+    },
+    {
+      "id": "2127340",
+      "question": "Will Person P win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person P"
+    },
+    {
+      "id": "2127344",
+      "question": "Will Person R win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person R"
+    },
+    {
+      "id": "2127346",
+      "question": "Will Person T win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person T"
+    },
+    {
+      "id": "2127348",
+      "question": "Will Person V win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person V"
+    },
+    {
+      "id": "2127350",
+      "question": "Will Person X win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person X"
+    },
+    {
+      "id": "2127352",
+      "question": "Will Person Z win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person Z"
+    },
+    {
+      "id": "2127354",
+      "question": "Will Person AB win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person AB"
+    },
+    {
+      "id": "2127356",
+      "question": "Will Person AD win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person AD"
+    },
+    {
+      "id": "2127358",
+      "question": "Will Person AF win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person AF"
+    },
+    {
+      "id": "2127360",
+      "question": "Will Person AH win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person AH"
+    },
+    {
+      "id": "2127362",
+      "question": "Will Person AJ win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person AJ"
+    },
+    {
+      "id": "2127364",
+      "question": "Will Person AL win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person AL"
+    },
+    {
+      "id": "2127366",
+      "question": "Will Person AN win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person AN"
+    },
+    {
+      "id": "2127368",
+      "question": "Will Person AP win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person AP"
+    },
+    {
+      "id": "2127370",
+      "question": "Will Person AR win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person AR"
+    },
+    {
+      "id": "2127372",
+      "question": "Will Person AT win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person AT"
+    },
+    {
+      "id": "2127374",
+      "question": "Will Person AV win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person AV"
+    },
+    {
+      "id": "2127376",
+      "question": "Will Person AX win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person AX"
+    },
+    {
+      "id": "2127378",
+      "question": "Will Person AZ win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person AZ"
+    },
+    {
+      "id": "2127310",
+      "question": "Will Juan Grabois win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "outcomePrices": "[\"0.0525\", \"0.9475\"]",
+      "volume24hr": 1468.6068120000002,
+      "groupItemTitle": "Juan Grabois"
+    },
+    {
+      "id": "2127312",
+      "question": "Will Axel Kicillof win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "outcomePrices": "[\"0.295\", \"0.705\"]",
+      "volume24hr": 1412.0865609999998,
+      "groupItemTitle": "Axel Kicillof"
+    },
+    {
+      "id": "2127314",
+      "question": "Will Juan Schiaretti win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "outcomePrices": "[\"0.005\", \"0.995\"]",
+      "volume24hr": 838.650054,
+      "groupItemTitle": "Juan Schiaretti"
+    },
+    {
+      "id": "2127316",
+      "question": "Will Myriam Bregman win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "outcomePrices": "[\"0.0515\", \"0.9485\"]",
+      "volume24hr": 992.069292,
+      "groupItemTitle": "Myriam Bregman"
+    },
+    {
+      "id": "2127318",
+      "question": "Will Mauricio Macri win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "outcomePrices": "[\"0.0655\", \"0.9345\"]",
+      "volume24hr": 1269.824524,
+      "groupItemTitle": "Mauricio Macri"
+    },
+    {
+      "id": "2127320",
+      "question": "Will Person A win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person A"
+    },
+    {
+      "id": "2127322",
+      "question": "Will Person C win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person C"
+    },
+    {
+      "id": "2127324",
+      "question": "Will Person E win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person E"
+    },
+    {
+      "id": "2127326",
+      "question": "Will Person G win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person G"
+    },
+    {
+      "id": "2127328",
+      "question": "Will Person I win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person I"
+    },
+    {
+      "id": "2127330",
+      "question": "Will Person K win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person K"
+    },
+    {
+      "id": "2127332",
+      "question": "Will Person M win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person M"
+    },
+    {
+      "id": "2127334",
+      "question": "Will Person O win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person O"
+    },
+    {
+      "id": "2127343",
+      "question": "Will Person Q win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person Q"
+    },
+    {
+      "id": "2127345",
+      "question": "Will Person S win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person S"
+    },
+    {
+      "id": "2127347",
+      "question": "Will Person U win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person U"
+    },
+    {
+      "id": "2127349",
+      "question": "Will Person W win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person W"
+    },
+    {
+      "id": "2127351",
+      "question": "Will Person Y win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person Y"
+    },
+    {
+      "id": "2127353",
+      "question": "Will Person AA win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person AA"
+    },
+    {
+      "id": "2127355",
+      "question": "Will Person AC win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person AC"
+    },
+    {
+      "id": "2127357",
+      "question": "Will Person AE win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person AE"
+    },
+    {
+      "id": "2127359",
+      "question": "Will Person AG win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person AG"
+    },
+    {
+      "id": "2127361",
+      "question": "Will Person AI win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person AI"
+    },
+    {
+      "id": "2127363",
+      "question": "Will Person AK win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person AK"
+    },
+    {
+      "id": "2127365",
+      "question": "Will Person AM win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person AM"
+    },
+    {
+      "id": "2127367",
+      "question": "Will Person AO win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person AO"
+    },
+    {
+      "id": "2127369",
+      "question": "Will Person AQ win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person AQ"
+    },
+    {
+      "id": "2127371",
+      "question": "Will Person AS win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person AS"
+    },
+    {
+      "id": "2127373",
+      "question": "Will Person AU win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person AU"
+    },
+    {
+      "id": "2127375",
+      "question": "Will Person AW win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person AW"
+    },
+    {
+      "id": "2127377",
+      "question": "Will Person AY win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Person AY"
+    },
+    {
+      "id": "2127379",
+      "question": "Will someone else win the 2027 Argentina presidential election?",
+      "outcomes": "[\"Yes\", \"No\"]",
+      "volume24hr": 0,
+      "groupItemTitle": "Other"
+    }
+  ]
+}
