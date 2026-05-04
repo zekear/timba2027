@@ -1,4 +1,5 @@
 import cron from 'node-cron';
+import { pool } from '../db/client.js';
 import { logger } from '../lib/logger.js';
 import { env } from '../lib/env.js';
 import { runPolymarketIngest } from '../sources/polymarket/ingest.js';
@@ -68,8 +69,17 @@ main().catch((err) => {
   process.exit(1);
 });
 
-// Graceful shutdown — node-cron no tiene cleanup explícito; basta con que el proceso muera.
-process.on('SIGTERM', () => {
-  logger.info('orchestrator: SIGTERM received, exiting');
+// Graceful shutdown — drena el pool antes de exit y maneja SIGTERM + SIGINT.
+async function shutdown(signal: string): Promise<void> {
+  logger.info({ signal }, 'orchestrator: signal received, shutting down');
+  try {
+    await pool.end();
+    logger.info('orchestrator: pool drained');
+  } catch (err) {
+    logger.error({ err: (err as Error).message }, 'orchestrator: pool drain failed');
+  }
   process.exit(0);
-});
+}
+
+process.on('SIGTERM', () => void shutdown('SIGTERM'));
+process.on('SIGINT', () => void shutdown('SIGINT'));
