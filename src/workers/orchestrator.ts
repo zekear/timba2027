@@ -1,10 +1,12 @@
 import cron from 'node-cron';
+import { pool } from '../db/client.js';
 import { logger } from '../lib/logger.js';
 import { env } from '../lib/env.js';
 import { runPolymarketIngest } from '../sources/polymarket/ingest.js';
 import { detectMoves } from '../sources/polymarket/moves.js';
 import { runNewsIngest } from '../sources/news/ingest.js';
 import { runNewsTagger } from '../sources/news/tagger.js';
+import { runPollsIngest } from '../sources/polls/ingest.js';
 
 /**
  * Wrapper para que un cron job no se solape con sí mismo si tarda más de
@@ -54,10 +56,14 @@ async function main() {
   // News tagger cada 5 min (batches de 20)
   cron.schedule('*/5 * * * *', singleflight('news-tagger', runNewsTagger));
 
+  // Polls cada N horas (X API es caro, no apuramos)
+  cron.schedule(`0 */${env.POLLS_POLL_INTERVAL_HOURS} * * *`, singleflight('polls-ingest', runPollsIngest));
+
   logger.info(
     {
       polymarket_min: env.POLYMARKET_POLL_INTERVAL_MIN,
       news_min: env.NEWS_POLL_INTERVAL_MIN,
+      polls_hours: env.POLLS_POLL_INTERVAL_HOURS,
     },
     'orchestrator: schedules registered',
   );
@@ -68,8 +74,17 @@ main().catch((err) => {
   process.exit(1);
 });
 
-// Graceful shutdown — node-cron no tiene cleanup explícito; basta con que el proceso muera.
-process.on('SIGTERM', () => {
-  logger.info('orchestrator: SIGTERM received, exiting');
+// Graceful shutdown — drena el pool antes de exit y maneja SIGTERM + SIGINT.
+async function shutdown(signal: string): Promise<void> {
+  logger.info({ signal }, 'orchestrator: signal received, shutting down');
+  try {
+    await pool.end();
+    logger.info('orchestrator: pool drained');
+  } catch (err) {
+    logger.error({ err: (err as Error).message }, 'orchestrator: pool drain failed');
+  }
   process.exit(0);
-});
+}
+
+process.on('SIGTERM', () => void shutdown('SIGTERM'));
+process.on('SIGINT', () => void shutdown('SIGINT'));

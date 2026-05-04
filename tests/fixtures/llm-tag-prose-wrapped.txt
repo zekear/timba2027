@@ -1,0 +1,7 @@
+Aquí está el resultado del análisis:
+
+```json
+{"candidates": ["Milei", "Kicillof"], "category": "campania", "relevance": 0.8}
+```
+
+Espero que sea útil.

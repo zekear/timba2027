@@ -1,0 +1,32 @@
+{
+  "user": {
+    "id": "2772994632",
+    "username": "AtlasINTEL",
+    "name": "Atlas INTEL"
+  },
+  "tweets": [
+    {
+      "id": "568584088761733120",
+      "text": "Check out the Official 2015 Atlas eSports Jerseys, Designed by @GamersGearEU http://t.co/nZrwDQnozp",
+      "author_id": "2772994632",
+      "created_at": "2015-02-20T01:33:05.000Z",
+      "attachments": {
+        "media_keys": [
+          "3_568584085849640960"
+        ]
+      }
+    }
+  ],
+  "media": [
+    [
+      "3_568584085849640960",
+      {
+        "media_key": "3_568584085849640960",
+        "type": "photo",
+        "url": "https://pbs.twimg.com/media/B-QENq4CEAAs3T_.jpg",
+        "width": 1024,
+        "height": 568
+      }
+    ]
+  ]
+}

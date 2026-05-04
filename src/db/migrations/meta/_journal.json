@@ -8,6 +8,13 @@
       "when": 1777899625771,
       "tag": "0000_petite_vapor",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1777903168144,
+      "tag": "0001_sour_freak",
+      "breakpoints": true
     }
   ]
 }

@@ -7,33 +7,39 @@ Design system (visual): [`DESIGN.md`](DESIGN.md)
 
 ## Estado
 
-**Fase 1 — Foundation + Ingestion** (en curso). Pipelines de Polymarket y noticias RSS corriendo localmente. Polls (fase 2), trigger engine (fase 3), publisher (fase 4) y sitio público (fase 5) pendientes.
+**Fase 2 — Polls Ingestion** (en curso). Pipelines de Polymarket, noticias y polls (X API + LLM vision) corriendo localmente. Trigger engine (fase 3), publisher (fase 4) y sitio público (fase 5) pendientes.
 
 ## Setup local
 
-Requisitos: Node 20+, pnpm, Docker Desktop, `claude` CLI autenticado.
+Requisitos: Node 20+, pnpm, Docker Desktop, `claude` CLI autenticado, X API bearer token (desde X developer portal).
 
 ```bash
 cp .env.example .env
+# Editar .env con X_API_BEARER_TOKEN
 docker compose up -d           # Postgres
 pnpm install
 pnpm db:migrate
+pnpm tsx scripts/seed-pollsters.ts   # idempotente, sólo primera vez
 pnpm worker                    # arranca ingestion loop
 ```
 
 ## Comandos útiles
 
 ```bash
-pnpm dev                       # worker en watch mode (reinicia al cambiar src/)
+pnpm dev                       # worker en watch mode
 pnpm worker                    # worker sin watch
 pnpm test                      # vitest run
-pnpm test:watch                # vitest watch
 pnpm typecheck                 # tsc --noEmit
 pnpm db:generate               # genera migración nueva
 pnpm db:migrate                # aplica migraciones pendientes
 pnpm db:studio                 # UI web de drizzle (browse DB)
+
+# Polls review queue
+pnpm tsx scripts/review-polls.ts list
+pnpm tsx scripts/review-polls.ts approve <id>
+pnpm tsx scripts/review-polls.ts reject <id>
 ```
 
 ## Estructura
 
-Ver `docs/superpowers/plans/` para el plan de implementación por fases.
+Ver `docs/superpowers/plans/` para los planes por fase.

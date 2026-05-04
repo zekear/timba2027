@@ -97,3 +97,55 @@ export const events = pgTable(
     pendingIdx: index('events_pending_idx').on(t.status, t.createdAt),
   }),
 );
+
+// ──────────────────────────────────────────────────────────────────
+// Pollsters (encuestadoras y analistas que monitoreamos)
+// ──────────────────────────────────────────────────────────────────
+
+export const pollsters = pgTable('pollsters', {
+  id: serial('id').primaryKey(),
+  slug: text('slug').notNull().unique(),         // 'opinaia' | 'cb_consultora' | etc.
+  displayName: text('display_name').notNull(),   // 'Opinaia'
+  xHandle: text('x_handle').notNull().unique(),  // 'opinaiagency' (sin @)
+  xUserId: text('x_user_id'),                    // populated después del primer fetch
+  active: boolean('active').notNull().default(true),
+  notes: text('notes'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+// ──────────────────────────────────────────────────────────────────
+// Polls (encuestas extraídas)
+// ──────────────────────────────────────────────────────────────────
+
+export const pollConfidenceEnum = pgEnum('poll_confidence', ['alto', 'medio', 'bajo']);
+export const pollStatusEnum = pgEnum('poll_status', [
+  'pending_review',
+  'approved',
+  'auto_approved',
+  'rejected',
+]);
+
+export const polls = pgTable(
+  'polls',
+  {
+    id: serial('id').primaryKey(),
+    pollsterId: integer('pollster_id').notNull().references(() => pollsters.id),
+    sourceUrl: text('source_url').notNull(),
+    sourceTweetId: text('source_tweet_id').notNull(),
+    fechaCampo: timestamp('fecha_campo', { withTimezone: true }),
+    sampleSize: integer('sample_size'),
+    metodologia: text('metodologia'),
+    results: jsonb('results').$type<Array<{ candidato: string; pct: number }>>().notNull(),
+    confidence: pollConfidenceEnum('confidence').notNull(),
+    status: pollStatusEnum('status').notNull().default('pending_review'),
+    rawClassifierOutput: text('raw_classifier_output'),
+    rawExtractorOutput: text('raw_extractor_output'),
+    ingestedAt: timestamp('ingested_at', { withTimezone: true }).defaultNow().notNull(),
+    reviewedAt: timestamp('reviewed_at', { withTimezone: true }),
+  },
+  (t) => ({
+    sourceTweetUq: uniqueIndex('polls_source_tweet_uq').on(t.sourceTweetId),
+    pendingIdx: index('polls_pending_idx').on(t.status, t.ingestedAt),
+    pollsterIdx: index('polls_pollster_idx').on(t.pollsterId, t.ingestedAt),
+  }),
+);

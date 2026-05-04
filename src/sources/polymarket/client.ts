@@ -1,5 +1,6 @@
 import { env } from '../../lib/env.js';
 import { logger } from '../../lib/logger.js';
+import { fetchWithTimeout } from '../../lib/http.js';
 import { polymarketEventSchema, type PolymarketEvent } from './types.js';
 
 /**
@@ -10,7 +11,10 @@ export async function fetchEventsByTag(tagSlug: string): Promise<PolymarketEvent
   const url = `${env.POLYMARKET_API_BASE}/events?tag_slug=${encodeURIComponent(tagSlug)}&closed=false&archived=false&limit=50`;
   logger.debug({ url }, 'polymarket: fetching events');
 
-  const res = await fetch(url, { headers: { accept: 'application/json' } });
+  const res = await fetchWithTimeout(url, {
+    timeoutMs: 15_000,
+    headers: { accept: 'application/json' },
+  });
   if (!res.ok) {
     throw new Error(`Polymarket fetch failed: ${res.status} ${res.statusText}`);
   }

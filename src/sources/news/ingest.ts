@@ -1,12 +1,14 @@
 import { sql } from 'drizzle-orm';
 import { db } from '../../db/client.js';
 import { news } from '../../db/schema.js';
+import { fetchWithTimeout } from '../../lib/http.js';
 import { logger } from '../../lib/logger.js';
 import { FEEDS } from './feeds.js';
 import { parseRssXml, type NewsItem } from './parse.js';
 
 async function fetchFeed(url: string): Promise<string> {
-  const res = await fetch(url, {
+  const res = await fetchWithTimeout(url, {
+    timeoutMs: 15_000,
     headers: { accept: 'application/rss+xml,application/xml,*/*' },
   });
   if (!res.ok) throw new Error(`${url}: ${res.status}`);

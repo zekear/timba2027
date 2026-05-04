@@ -77,7 +77,7 @@ export async function runNewsTagger(): Promise<{ tagged: number; failed: number 
 }
 
 /** Extrae el primer bloque JSON de la respuesta del LLM (tolera prosa alrededor). */
-function extractJson(raw: string): unknown {
+export function extractJson(raw: string): unknown {
   const trimmed = raw.trim();
   // Caso feliz: el LLM devolvió JSON puro.
   if (trimmed.startsWith('{')) return JSON.parse(trimmed);
