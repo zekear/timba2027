@@ -1,0 +1,26 @@
+import { config } from 'dotenv';
+import { z } from 'zod';
+
+config();
+
+const schema = z.object({
+  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  DATABASE_URL: z.string().url(),
+  LLM_TRANSPORT: z.enum(['cli', 'sdk']).default('cli'),
+  LLM_CLI_BIN: z.string().default('claude'),
+  LLM_CLI_TIMEOUT_MS: z.coerce.number().int().positive().default(60_000),
+  LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
+  POLYMARKET_API_BASE: z.string().url().default('https://gamma-api.polymarket.com'),
+  POLYMARKET_POLL_INTERVAL_MIN: z.coerce.number().int().positive().default(15),
+  MARKET_MOVE_THRESHOLD_PCT: z.coerce.number().positive().default(2),
+  NEWS_POLL_INTERVAL_MIN: z.coerce.number().int().positive().default(15),
+});
+
+const parsed = schema.safeParse(process.env);
+
+if (!parsed.success) {
+  console.error('Invalid environment variables:', parsed.error.flatten().fieldErrors);
+  throw new Error('Invalid env');
+}
+
+export const env = parsed.data;
