@@ -2,10 +2,32 @@ import { eq } from 'drizzle-orm';
 import { basename } from 'node:path';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import type { Metadata } from 'next';
 import { db } from '../../../src/db/client.js';
 import { botPosts } from '../../../src/db/schema.js';
 import { Header } from '../../components/public/Header.js';
 import { Footer } from '../../components/public/Footer.js';
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const numId = Number(id);
+  if (!Number.isInteger(numId)) return { title: 'Post' };
+  const [p] = await db.select().from(botPosts).where(eq(botPosts.id, numId));
+  if (!p || p.status !== 'published') return { title: 'Post' };
+  const cardFile = (await import('node:path')).basename(p.cardPath);
+  return {
+    title: p.caption.slice(0, 70),
+    description: p.caption.slice(0, 200),
+    openGraph: {
+      title: p.caption.slice(0, 70),
+      images: [`/api/cards/${encodeURIComponent(cardFile)}`],
+    },
+  };
+}
 
 export const dynamic = 'force-dynamic';
 

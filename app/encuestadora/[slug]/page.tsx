@@ -1,11 +1,26 @@
 import { eq, desc } from 'drizzle-orm';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import type { Metadata } from 'next';
 import { db } from '../../../src/db/client.js';
 import { pollsters, polls } from '../../../src/db/schema.js';
 import { Header } from '../../components/public/Header.js';
 import { Footer } from '../../components/public/Footer.js';
 import { PollResultsTable } from '../../components/public/PollResultsTable.js';
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const [pollster] = await db.select().from(pollsters).where(eq(pollsters.slug, slug));
+  if (!pollster) return { title: 'Encuestadora' };
+  return {
+    title: pollster.displayName,
+    description: `Histórico de encuestas de ${pollster.displayName}.`,
+  };
+}
 
 export const dynamic = 'force-dynamic';
 

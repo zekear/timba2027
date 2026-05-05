@@ -1,12 +1,26 @@
 import { sql, desc } from 'drizzle-orm';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import type { Metadata } from 'next';
 import { db } from '../../../src/db/client.js';
 import { botPosts } from '../../../src/db/schema.js';
 import { candidateToSlug, slugToCandidate } from '../../lib/slug.js';
 import { Header } from '../../components/public/Header.js';
 import { Footer } from '../../components/public/Footer.js';
 import { PostCard } from '../../components/public/PostCard.js';
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ candidate: string }>;
+}): Promise<Metadata> {
+  const { candidate } = await params;
+  const real = (await findCandidateByName(candidate)) ?? slugToCandidate(candidate);
+  return {
+    title: `${real} — Polymarket 2027`,
+    description: `Cotización en Polymarket y posts del bot sobre ${real}.`,
+  };
+}
 
 export const dynamic = 'force-dynamic';
 

@@ -8,6 +8,11 @@ import { BarRow } from '../components/public/BarRow.js';
 
 export const dynamic = 'force-dynamic';
 
+export const metadata = {
+  title: '2027 — Mercado de elecciones presidenciales',
+  description: 'Top 5 candidatos en Polymarket y timeline de últimos 30 días.',
+};
+
 async function getTimeSeriesData(): Promise<{ data: ChartPoint[]; candidates: string[] }> {
   const topRes = await db.execute(sql`
     SELECT DISTINCT ON (candidate) candidate, price::float AS price

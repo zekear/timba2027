@@ -23,6 +23,7 @@ const schema = z.object({
   SOFT_LAUNCH_DELAY_SEC: z.coerce.number().int().nonnegative().default(60),
   ADMIN_BASIC_AUTH_USER: z.string().optional(),
   ADMIN_BASIC_AUTH_PASS: z.string().optional(),
+  SITE_URL: z.string().url().default('http://localhost:3000'),
 });
 
 const parsed = schema.safeParse(process.env);
