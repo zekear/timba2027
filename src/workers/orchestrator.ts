@@ -1,12 +1,18 @@
 import cron from 'node-cron';
-import { pool } from '../db/client.js';
+import { sql, eq } from 'drizzle-orm';
+import { db, pool } from '../db/client.js';
+import { pollsters } from '../db/schema.js';
 import { logger } from '../lib/logger.js';
 import { env } from '../lib/env.js';
 import { runPolymarketIngest } from '../sources/polymarket/ingest.js';
-import { detectMoves } from '../sources/polymarket/moves.js';
 import { runNewsIngest } from '../sources/news/ingest.js';
 import { runNewsTagger } from '../sources/news/tagger.js';
 import { runPollsIngest } from '../sources/polls/ingest.js';
+import { runMarketMoveWatcher } from '../trigger/watchers/market-move.js';
+import { runNewPollWatcher } from '../trigger/watchers/new-poll.js';
+import { runHotNewsWatcher } from '../trigger/watchers/hot-news.js';
+import { runTriggerOrchestrator } from '../trigger/orchestrator.js';
+import { runMorningBrief } from '../trigger/morning-brief.js';
 
 /**
  * Wrapper para que un cron job no se solape con sí mismo si tarda más de
@@ -35,6 +41,22 @@ function singleflight(name: string, fn: () => Promise<unknown>) {
 async function main() {
   logger.info('orchestrator: starting');
 
+  // Boot-time validation — warn early on missing optional secrets
+  // que se vuelven obligatorios en runtime cuando hay pollsters activos.
+  if (!env.X_API_BEARER_TOKEN) {
+    const activeCount = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(pollsters)
+      .where(eq(pollsters.active, true));
+    const count = activeCount[0]?.count ?? 0;
+    if (count > 0) {
+      logger.warn(
+        { activePollsters: count },
+        'orchestrator: X_API_BEARER_TOKEN missing — polls ingest will fail at next 6h tick',
+      );
+    }
+  }
+
   // Run once at boot para validar que todo el wiring funciona.
   await runPolymarketIngest();
   await runNewsIngest();
@@ -42,12 +64,6 @@ async function main() {
   // Polymarket cada N min
   cron.schedule(`*/${env.POLYMARKET_POLL_INTERVAL_MIN} * * * *`, singleflight('polymarket-ingest', async () => {
     await runPolymarketIngest();
-    const moves = await detectMoves({
-      thresholdPct: env.MARKET_MOVE_THRESHOLD_PCT,
-      windowHours: 6,
-    });
-    if (moves.length) logger.info({ moves }, 'orchestrator: market moves');
-    // En fase 3 aquí se emiten events a la cola. Por ahora solo logueamos.
   }));
 
   // News ingest cada N min
@@ -58,6 +74,22 @@ async function main() {
 
   // Polls cada N horas (X API es caro, no apuramos)
   cron.schedule(`0 */${env.POLLS_POLL_INTERVAL_HOURS} * * *`, singleflight('polls-ingest', runPollsIngest));
+
+  // Watchers cada 5 min — emiten events si hay novedades
+  cron.schedule('*/5 * * * *', singleflight('market-move-watcher', () =>
+    runMarketMoveWatcher({ thresholdPct: env.MARKET_MOVE_THRESHOLD_PCT, windowHours: 6 }).then(() => undefined)));
+  cron.schedule('*/5 * * * *', singleflight('new-poll-watcher', () =>
+    runNewPollWatcher().then(() => undefined)));
+  cron.schedule('*/5 * * * *', singleflight('hot-news-watcher', () =>
+    runHotNewsWatcher({ relevanceThreshold: 0.7 }).then(() => undefined)));
+
+  // Trigger orchestrator: cada 2 min consume events y genera drafts
+  cron.schedule('*/2 * * * *', singleflight('trigger-orchestrator', () =>
+    runTriggerOrchestrator().then(() => undefined)));
+
+  // Morning brief diario a las 9am ARG (12:00 UTC)
+  cron.schedule('0 12 * * *', singleflight('morning-brief', () =>
+    runMorningBrief().then(() => undefined)));
 
   logger.info(
     {

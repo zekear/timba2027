@@ -4,6 +4,7 @@ import { db } from '../../db/client.js';
 import { news } from '../../db/schema.js';
 import { llm } from '../../llm/index.js';
 import { logger } from '../../lib/logger.js';
+import { extractFirstJsonObject } from '../../lib/llm-json.js';
 
 const tagSchema = z.object({
   candidates: z.array(z.string()),  // nombres mencionados (ej: ["Milei", "Kicillof"])
@@ -52,7 +53,7 @@ export async function runNewsTagger(): Promise<{ tagged: number; failed: number 
   for (const item of pending) {
     try {
       const raw = await llm.classify(PROMPT_TEMPLATE(item.headline, item.excerpt), { model: 'haiku' });
-      const json = extractJson(raw);
+      const json = extractFirstJsonObject(raw, 'tagger');
       const parsed = tagSchema.parse(json);
 
       await db
@@ -76,16 +77,3 @@ export async function runNewsTagger(): Promise<{ tagged: number; failed: number 
   return { tagged, failed };
 }
 
-/** Extrae el primer bloque JSON de la respuesta del LLM (tolera prosa alrededor). */
-export function extractJson(raw: string): unknown {
-  const trimmed = raw.trim();
-  // Caso feliz: el LLM devolvió JSON puro.
-  if (trimmed.startsWith('{')) return JSON.parse(trimmed);
-  // Fallback: buscar el primer { ... } balanceado.
-  const start = trimmed.indexOf('{');
-  const end = trimmed.lastIndexOf('}');
-  if (start === -1 || end === -1 || end <= start) {
-    throw new Error(`No JSON found in LLM output: ${trimmed.slice(0, 200)}`);
-  }
-  return JSON.parse(trimmed.slice(start, end + 1));
-}

@@ -1,0 +1,1 @@
+ALTER TABLE "pollsters" ADD COLUMN "last_seen_tweet_id" text;

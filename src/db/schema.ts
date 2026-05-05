@@ -108,6 +108,7 @@ export const pollsters = pgTable('pollsters', {
   displayName: text('display_name').notNull(),   // 'Opinaia'
   xHandle: text('x_handle').notNull().unique(),  // 'opinaiagency' (sin @)
   xUserId: text('x_user_id'),                    // populated después del primer fetch
+  lastSeenTweetId: text('last_seen_tweet_id'),
   active: boolean('active').notNull().default(true),
   notes: text('notes'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
@@ -147,5 +148,47 @@ export const polls = pgTable(
     sourceTweetUq: uniqueIndex('polls_source_tweet_uq').on(t.sourceTweetId),
     pendingIdx: index('polls_pending_idx').on(t.status, t.ingestedAt),
     pollsterIdx: index('polls_pollster_idx').on(t.pollsterId, t.ingestedAt),
+  }),
+);
+
+// ──────────────────────────────────────────────────────────────────
+// Bot posts (cards + captions generadas por el trigger engine)
+// ──────────────────────────────────────────────────────────────────
+
+export const botPostShapeEnum = pgEnum('bot_post_shape', [
+  'morning_brief',
+  'market_move',
+  'new_poll',
+  'hot_news',
+]);
+
+export const botPostStatusEnum = pgEnum('bot_post_status', [
+  'draft',
+  'scheduled',
+  'published',
+  'killed',
+]);
+
+export const botPosts = pgTable(
+  'bot_posts',
+  {
+    id: serial('id').primaryKey(),
+    shape: botPostShapeEnum('shape').notNull(),
+    status: botPostStatusEnum('status').notNull().default('draft'),
+    caption: text('caption').notNull(),
+    cardPath: text('card_path').notNull(),
+    sourceSnapshot: jsonb('source_snapshot').notNull(),
+    llmMetadata: jsonb('llm_metadata').notNull(),
+    eventId: integer('event_id').references(() => events.id),
+    candidateFocus: text('candidate_focus'),
+    generatedAt: timestamp('generated_at', { withTimezone: true }).defaultNow().notNull(),
+    publishedAt: timestamp('published_at', { withTimezone: true }),
+    xPostId: text('x_post_id'),
+    metrics: jsonb('metrics'),
+  },
+  (t) => ({
+    statusIdx: index('bot_posts_status_idx').on(t.status, t.generatedAt),
+    candidateIdx: index('bot_posts_candidate_idx').on(t.candidateFocus, t.generatedAt),
+    eventIdx: index('bot_posts_event_idx').on(t.eventId),
   }),
 );
