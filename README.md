@@ -1,66 +1,74 @@
 # politica
 
-Bot automatizado de X (en construcción) que cruza Polymarket + encuestas locales + noticias para reportar el ciclo electoral argentino 2026-2027.
+Bot automatizado de X que cruza Polymarket + encuestas locales + noticias para reportar el ciclo electoral argentino 2026-2027.
+
+Sitio público: http://localhost:3000 · Admin: http://localhost:3000/admin
 
 Spec: [`docs/superpowers/specs/2026-05-04-politica-bot-design.md`](docs/superpowers/specs/2026-05-04-politica-bot-design.md)
 Design system (visual): [`DESIGN.md`](DESIGN.md)
 
 ## Estado
 
-**Fase 4 — Publisher + Admin** (en curso). Pipeline completo: Polymarket + News + Polls → Watchers → Trigger Engine → Cards + Captions → bot_posts(status='draft') → Admin (web/CLI) review → Publisher → X. Tres modos de publicación (shadow/soft/full) con kill switch global. Sitio público (fase 5) pendiente.
+**Fase 5 — Sitio público** (en curso). Pipeline completo + admin + sitio público navegable. VPS deploy queda como tarea operacional separada (no incluida en Fase 5).
 
 ## URLs
 
-- Worker: `pnpm worker` (no port, just logs)
-- Admin web: `pnpm web` → http://localhost:3000 (basic auth via ADMIN_BASIC_AUTH_USER/PASS)
-- Drafts CLI: `pnpm tsx scripts/admin.ts list`
+### Público (sin auth)
+- `/` — home (top 5 + últimos posts)
+- `/2027` — timeline mercado presidenciales
+- `/c/[candidate]` — página por candidato
+- `/encuestadora/[slug]` — página por encuestadora
+- `/posts/[id]` — detail de un post published
+
+### Admin (basic auth via ADMIN_BASIC_AUTH_USER/PASS)
+- `/admin` — drafts queue
+- `/admin/settings` — kill switch + mode selector
+- `/admin/posts/[id]` — detail con actions (approve/kill/publish-now)
 
 ## Setup local
 
-Requisitos: Node 20+, pnpm, Docker Desktop, `claude` CLI autenticado, X API bearer token (desde X developer portal).
+Requisitos: Node 20+, pnpm, Docker Desktop, claude CLI autenticado, X API bearer token.
 
 ```bash
 cp .env.example .env
 # Editar .env con X_API_BEARER_TOKEN, ADMIN_BASIC_AUTH_USER/PASS
-docker compose up -d           # Postgres
+
+docker compose up -d
 pnpm install
 pnpm db:migrate
-pnpm tsx scripts/seed-pollsters.ts   # idempotente, sólo primera vez
-pnpm worker                    # arranca ingestion + trigger + publisher loops
-pnpm web                       # Next.js admin UI (en otra terminal)
+pnpm tsx scripts/seed-pollsters.ts
+pnpm worker
+pnpm web
 ```
 
 ## Comandos útiles
 
 ```bash
-pnpm dev                       # worker en watch mode
-pnpm worker                    # worker sin watch
-pnpm web                       # Next.js admin dev server
-pnpm web:build && pnpm web:start   # admin prod build
-pnpm test                      # vitest run
-pnpm typecheck                 # tsc --noEmit
-pnpm db:generate               # genera migración nueva
-pnpm db:migrate                # aplica migraciones pendientes
-pnpm db:studio                 # UI web de drizzle (browse DB)
+pnpm dev                          # worker en watch mode
+pnpm worker
+pnpm web
+pnpm web:build && pnpm web:start
+pnpm test
+pnpm typecheck
+pnpm db:generate
+pnpm db:migrate
+pnpm db:studio
 
-# Polls review queue (Fase 2)
-pnpm tsx scripts/review-polls.ts list
-
-# Bot posts admin (Fase 4)
+# Bot posts admin
 pnpm tsx scripts/admin.ts list
 pnpm tsx scripts/admin.ts approve 42
 pnpm tsx scripts/admin.ts publish-now 42
-pnpm tsx scripts/admin.ts mode soft       # shadow|soft|full
-pnpm tsx scripts/admin.ts kill-switch on  # bloquea publicación
+pnpm tsx scripts/admin.ts mode soft
+pnpm tsx scripts/admin.ts kill-switch on
 ```
 
 ## Modos de publicación
 
-- **Shadow** (default): no publica nada a X. Drafts se generan pero quedan en queue para review manual. Útil para semanas iniciales o cuando hay incertidumbre.
-- **Soft launch**: publica solo entre 9-22hs ARG, cap 3/día, delay 60s post-approve (vos podés cancelar en esa ventana).
-- **Full autonomous**: publica 24/7 con cap 6/día, quiet hours 1-7am ARG.
+- **Shadow** (default): no publica nada a X. Drafts quedan en queue.
+- **Soft launch**: 9-22hs ARG, cap 3/día, delay 60s post-approve.
+- **Full autonomous**: 24/7 con cap 6/día, quiet hours 1-7am ARG.
 
-El **kill switch global** (env `KILL_SWITCH=true` o admin UI) bloquea TODA publicación independientemente del modo.
+**Kill switch global** bloquea TODA publicación.
 
 ## Estructura
 

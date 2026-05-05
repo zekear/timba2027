@@ -15,7 +15,7 @@ export function DraftRow(p: DraftRowProps) {
   const cardUrl = `/api/cards/${encodeURIComponent(cardFile)}`;
   return (
     <a
-      href={`/posts/${p.id}`}
+      href={`/admin/posts/${p.id}`}
       className="block border-b border-hairline py-4 hover:bg-paper transition-colors"
     >
       <div className="flex gap-6 items-start">
