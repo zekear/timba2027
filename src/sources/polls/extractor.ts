@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { llm } from '../../llm/index.js';
+import { extractFirstJsonObject } from '../../lib/llm-json.js';
 
 export const extractedPollSchema = z.object({
   pollster_hint: z.string().nullable(),       // ej: "Opinaia" si la imagen lo dice
@@ -45,17 +46,6 @@ Reglas:
 
 export async function extractPollFromImage(image: Buffer): Promise<ExtractedPoll> {
   const raw = await llm.extractFromImage(PROMPT, image, { model: 'sonnet' });
-  const json = extractFirstJsonObject(raw);
+  const json = extractFirstJsonObject(raw, 'extractor');
   return extractedPollSchema.parse(json);
-}
-
-function extractFirstJsonObject(raw: string): unknown {
-  const trimmed = raw.trim();
-  if (trimmed.startsWith('{')) return JSON.parse(trimmed);
-  const start = trimmed.indexOf('{');
-  const end = trimmed.lastIndexOf('}');
-  if (start === -1 || end === -1) {
-    throw new Error(`extractor: no JSON in output: ${trimmed.slice(0, 200)}`);
-  }
-  return JSON.parse(trimmed.slice(start, end + 1));
 }

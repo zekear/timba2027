@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { extractJson } from '../../../src/sources/news/tagger.js';
+import { extractFirstJsonObject as extractJson } from '../../../src/lib/llm-json.js';
 import { z } from 'zod';
 
 const tagSchema = z.object({
