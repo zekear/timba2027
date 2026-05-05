@@ -9,6 +9,11 @@ import { detectMoves } from '../sources/polymarket/moves.js';
 import { runNewsIngest } from '../sources/news/ingest.js';
 import { runNewsTagger } from '../sources/news/tagger.js';
 import { runPollsIngest } from '../sources/polls/ingest.js';
+import { runMarketMoveWatcher } from '../trigger/watchers/market-move.js';
+import { runNewPollWatcher } from '../trigger/watchers/new-poll.js';
+import { runHotNewsWatcher } from '../trigger/watchers/hot-news.js';
+import { runTriggerOrchestrator } from '../trigger/orchestrator.js';
+import { runMorningBrief } from '../trigger/morning-brief.js';
 
 /**
  * Wrapper para que un cron job no se solape con sí mismo si tarda más de
@@ -76,6 +81,22 @@ async function main() {
 
   // Polls cada N horas (X API es caro, no apuramos)
   cron.schedule(`0 */${env.POLLS_POLL_INTERVAL_HOURS} * * *`, singleflight('polls-ingest', runPollsIngest));
+
+  // Watchers cada 5 min — emiten events si hay novedades
+  cron.schedule('*/5 * * * *', singleflight('market-move-watcher', () =>
+    runMarketMoveWatcher({ thresholdPct: env.MARKET_MOVE_THRESHOLD_PCT, windowHours: 6 }).then(() => undefined)));
+  cron.schedule('*/5 * * * *', singleflight('new-poll-watcher', () =>
+    runNewPollWatcher().then(() => undefined)));
+  cron.schedule('*/5 * * * *', singleflight('hot-news-watcher', () =>
+    runHotNewsWatcher({ relevanceThreshold: 0.7 }).then(() => undefined)));
+
+  // Trigger orchestrator: cada 2 min consume events y genera drafts
+  cron.schedule('*/2 * * * *', singleflight('trigger-orchestrator', () =>
+    runTriggerOrchestrator().then(() => undefined)));
+
+  // Morning brief diario a las 9am ARG (12:00 UTC)
+  cron.schedule('0 12 * * *', singleflight('morning-brief', () =>
+    runMorningBrief().then(() => undefined)));
 
   logger.info(
     {

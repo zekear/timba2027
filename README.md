@@ -7,7 +7,7 @@ Design system (visual): [`DESIGN.md`](DESIGN.md)
 
 ## Estado
 
-**Fase 2 — Polls Ingestion** (en curso). Pipelines de Polymarket, noticias y polls (X API + LLM vision) corriendo localmente. Trigger engine (fase 3), publisher (fase 4) y sitio público (fase 5) pendientes.
+**Fase 3 — Trigger Engine + Content Generation** (en curso). Pipelines de Polymarket, noticias, polls + watchers + trigger engine + cards (Satori) + captions (LLM + linter) corriendo localmente. Posts generados como `bot_posts(status='draft')` en DB con cards en `storage/cards/`. Publisher (fase 4) y sitio público (fase 5) pendientes.
 
 ## Setup local
 
