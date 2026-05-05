@@ -102,7 +102,12 @@ async function handleMarketMove(
     caption: cap_.caption,
     cardPath: relPath,
     sourceSnapshot: { event: payload },
-    llmMetadata: { source: cap_.source, attempts: cap_.attempts, lintViolations: cap_.lintViolations },
+    llmMetadata: {
+      source: cap_.source,
+      attempts: cap_.attempts,
+      lintViolations: cap_.lintViolations,
+      rawOutputs: cap_.rawOutputs,
+    },
     eventId,
     candidateFocus: payload.candidate,
   }).returning({ id: botPosts.id });
@@ -148,7 +153,12 @@ async function handleNewPoll(
     caption: cap_.caption,
     cardPath: relPath,
     sourceSnapshot: captionData,
-    llmMetadata: { source: cap_.source, attempts: cap_.attempts, lintViolations: cap_.lintViolations },
+    llmMetadata: {
+      source: cap_.source,
+      attempts: cap_.attempts,
+      lintViolations: cap_.lintViolations,
+      rawOutputs: cap_.rawOutputs,
+    },
     eventId,
     candidateFocus: payload.topCandidate,
   }).returning({ id: botPosts.id });
@@ -184,7 +194,12 @@ async function handleHotNews(
     caption: cap_.caption,
     cardPath: relPath,
     sourceSnapshot: payload,
-    llmMetadata: { source: cap_.source, attempts: cap_.attempts, lintViolations: cap_.lintViolations },
+    llmMetadata: {
+      source: cap_.source,
+      attempts: cap_.attempts,
+      lintViolations: cap_.lintViolations,
+      rawOutputs: cap_.rawOutputs,
+    },
     eventId,
     candidateFocus: focusCandidate,
   }).returning({ id: botPosts.id });

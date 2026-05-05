@@ -5,7 +5,6 @@ import { pollsters } from '../db/schema.js';
 import { logger } from '../lib/logger.js';
 import { env } from '../lib/env.js';
 import { runPolymarketIngest } from '../sources/polymarket/ingest.js';
-import { detectMoves } from '../sources/polymarket/moves.js';
 import { runNewsIngest } from '../sources/news/ingest.js';
 import { runNewsTagger } from '../sources/news/tagger.js';
 import { runPollsIngest } from '../sources/polls/ingest.js';
@@ -65,12 +64,6 @@ async function main() {
   // Polymarket cada N min
   cron.schedule(`*/${env.POLYMARKET_POLL_INTERVAL_MIN} * * * *`, singleflight('polymarket-ingest', async () => {
     await runPolymarketIngest();
-    const moves = await detectMoves({
-      thresholdPct: env.MARKET_MOVE_THRESHOLD_PCT,
-      windowHours: 6,
-    });
-    if (moves.length) logger.info({ moves }, 'orchestrator: market moves');
-    // En fase 3 aquí se emiten events a la cola. Por ahora solo logueamos.
   }));
 
   // News ingest cada N min

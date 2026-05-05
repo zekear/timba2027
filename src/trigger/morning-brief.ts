@@ -11,6 +11,17 @@ export async function runMorningBrief(): Promise<{ ok: boolean; postId?: number;
   const cap = await canPostNow({ now: new Date(), candidateFocus: null });
   if (!cap.ok) return { ok: false, reason: cap.reason };
 
+  const existing = await db.execute(sql`
+    SELECT 1 FROM bot_posts
+    WHERE shape = 'morning_brief'
+      AND status IN ('draft', 'scheduled', 'published')
+      AND generated_at > NOW() - INTERVAL '18 hours'
+    LIMIT 1
+  `);
+  if (existing.rows.length > 0) {
+    return { ok: false, reason: 'already_drafted_today' };
+  }
+
   const rows = await db.execute(sql`
     WITH latest AS (
       SELECT DISTINCT ON (candidate) candidate, price::float AS price
@@ -63,7 +74,12 @@ export async function runMorningBrief(): Promise<{ ok: boolean; postId?: number;
     caption: cap_.caption,
     cardPath: relPath,
     sourceSnapshot: captionData,
-    llmMetadata: { source: cap_.source, attempts: cap_.attempts, lintViolations: cap_.lintViolations },
+    llmMetadata: {
+      source: cap_.source,
+      attempts: cap_.attempts,
+      lintViolations: cap_.lintViolations,
+      rawOutputs: cap_.rawOutputs,
+    },
   }).returning({ id: botPosts.id });
 
   logger.info({ postId: inserted[0].id, source: cap_.source }, 'morning-brief: drafted');
