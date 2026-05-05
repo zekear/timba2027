@@ -1,7 +1,10 @@
 /**
- * Lista curada de cuentas X de encuestadoras y analistas argentinos.
- * Se siembra a la DB en boot (idempotente). Después de seed, podés desactivar
- * cualquiera con UPDATE pollsters SET active = false WHERE slug = '...'.
+ * Lista curada de cuentas X de encuestadoras argentinas (la lista canónica
+ * que el bot monitorea). Se siembra a la DB en boot.
+ *
+ * Para desactivar una sin removerla del seed: SET active=false manualmente,
+ * o quitarla de este array y correr `pnpm tsx scripts/seed-pollsters.ts` —
+ * el seed marca como inactive a todas las que no aparecen acá.
  */
 
 export interface PollsterSeed {
@@ -12,16 +15,44 @@ export interface PollsterSeed {
 }
 
 export const POLLSTERS: PollsterSeed[] = [
-  // Encuestadoras formales
-  { slug: 'opinaia',         displayName: 'Opinaia',                   xHandle: 'opinaiagency' },
-  { slug: 'cb_consultora',   displayName: 'CB Consultora',             xHandle: 'cb_consultora' },
-  { slug: 'synopsis',        displayName: 'Synopsis Consultores',      xHandle: 'SynopsisCons' },
-  { slug: 'atlas_intel',     displayName: 'Atlas Intel',               xHandle: 'AtlasIntel' },
-  { slug: 'zuban_cordoba',   displayName: 'Zuban Córdoba',             xHandle: 'ZubanCordoba' },
-  { slug: 'management_fit',  displayName: 'Management & Fit',          xHandle: 'Manage_Fit' },
-  // Analistas que publican datos de encuestas
-  { slug: 'fede_gonzalez',   displayName: 'Federico González',         xHandle: 'fede_gonzalez_ok' },
-  { slug: 'carlos_fara',     displayName: 'Carlos Fara',               xHandle: 'CarlosFara' },
-  { slug: 'shila_vilker',    displayName: 'Shila Vilker',              xHandle: 'ShilaVilker' },
-  { slug: 'lucas_romero',    displayName: 'Lucas Romero (Synopsis)',   xHandle: 'lucasrome',     notes: 'Director de Synopsis' },
+  {
+    slug: 'cb_consultora',
+    displayName: 'CB Consultora',
+    xHandle: 'CBglobaldata',
+    notes: 'Activa en imagen presidencial y proyecciones electorales.',
+  },
+  {
+    slug: 'atlas_intel',
+    displayName: 'Atlas Intel',
+    xHandle: 'AtlasIntelESP',
+    notes: 'Brasileña, fuerte presencia en AR, destacada en 2023.',
+  },
+  {
+    slug: 'management_fit',
+    displayName: 'Management & Fit',
+    xHandle: 'MyFconsultora',
+  },
+  {
+    slug: 'trespuntozero',
+    displayName: 'Trespuntozero',
+    xHandle: 'trespuntozero_',
+    notes: 'Dirigida por Shila Vilker.',
+  },
+  {
+    slug: 'giacobbe',
+    displayName: 'Giacobbe & Asociados',
+    xHandle: 'JorgeGiacobbe',
+    notes: 'Cuenta personal del director — comparte encuestas allí.',
+  },
+  {
+    slug: 'zentrix',
+    displayName: 'Zentrix Consultora',
+    xHandle: 'ZXConsultora',
+  },
+  {
+    slug: 'nueva_comunicacion',
+    displayName: 'Nueva Comunicación',
+    xHandle: 'Nuevacomar',
+    notes: 'Buen desempeño en bonaerenses recientes.',
+  },
 ];
