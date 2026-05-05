@@ -361,15 +361,15 @@ ADMIN_BASIC_AUTH_USER: z.string().optional(),
 ADMIN_BASIC_AUTH_PASS: z.string().optional(),
 ```
 
-- [ ] **Step 2: Append a `.env.example`**
+- [ ] **Step 2: Append a `.env.example`** (defaults seguros para nuevos contributors)
 
 ```bash
 cat >> .env.example <<'EOF'
 
-# Publish
+# Publish — DEFAULTS SEGUROS (no publican hasta que vos los habilites)
 PUBLISH_MODE=shadow                     # shadow | soft | full
-KILL_SWITCH=false                       # global toggle: si true bloquea TODA publicación
-BOT_HANDLE=@politica
+KILL_SWITCH=true                        # global toggle: TRUE bloquea TODA publicación
+BOT_HANDLE=@ezeqmina                    # cambialo cuando reserves el handle del bot
 SOFT_LAUNCH_DELAY_SEC=60                # segundos entre approve y publish (en modo soft)
 
 # Admin UI (basic auth)
@@ -378,24 +378,28 @@ ADMIN_BASIC_AUTH_PASS=
 EOF
 ```
 
-- [ ] **Step 3: Update tu `.env` real**
+- [ ] **Step 3: Update tu `.env` real con doble candado**
 
 ```bash
 cat >> .env <<'EOF'
 
-# Publish (Fase 4 defaults)
+# Publish — DOUBLE LOCK: shadow + kill switch ACTIVO
+# Para realmente publicar:
+#   1. Verificá X API write tier habilitado en developer.x.com
+#   2. Cambia PUBLISH_MODE a soft (o usá la admin UI)
+#   3. Bajá KILL_SWITCH a false (o desactivá vía admin UI)
 PUBLISH_MODE=shadow
-KILL_SWITCH=false
-BOT_HANDLE=@politica
+KILL_SWITCH=true
+BOT_HANDLE=@ezeqmina
 SOFT_LAUNCH_DELAY_SEC=60
 
-# Admin
+# Admin (basic auth — cambia las creds antes de exponer)
 ADMIN_BASIC_AUTH_USER=admin
 ADMIN_BASIC_AUTH_PASS=changeme-en-produccion
 EOF
 ```
 
-(Cambia las credenciales antes de exponer el admin.)
+**El bearer token actual es de la cuenta personal @ezeqmina.** Cualquier tweet que pase los 3 checks saldría desde esa cuenta. Por eso arrancamos con shadow + kill switch ON. La admin UI te permite togglear ambos en runtime cuando estés listo.
 
 - [ ] **Step 4: typecheck**
 
