@@ -8,3 +8,6 @@ coverage/
 .vitest/
 drizzle/
 .claude/
+
+# Runtime storage (cards generadas)
+storage/
