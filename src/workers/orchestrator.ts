@@ -1,5 +1,7 @@
 import cron from 'node-cron';
-import { pool } from '../db/client.js';
+import { sql, eq } from 'drizzle-orm';
+import { db, pool } from '../db/client.js';
+import { pollsters } from '../db/schema.js';
 import { logger } from '../lib/logger.js';
 import { env } from '../lib/env.js';
 import { runPolymarketIngest } from '../sources/polymarket/ingest.js';
@@ -34,6 +36,22 @@ function singleflight(name: string, fn: () => Promise<unknown>) {
 
 async function main() {
   logger.info('orchestrator: starting');
+
+  // Boot-time validation — warn early on missing optional secrets
+  // que se vuelven obligatorios en runtime cuando hay pollsters activos.
+  if (!env.X_API_BEARER_TOKEN) {
+    const activeCount = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(pollsters)
+      .where(eq(pollsters.active, true));
+    const count = activeCount[0]?.count ?? 0;
+    if (count > 0) {
+      logger.warn(
+        { activePollsters: count },
+        'orchestrator: X_API_BEARER_TOKEN missing — polls ingest will fail at next 6h tick',
+      );
+    }
+  }
 
   // Run once at boot para validar que todo el wiring funciona.
   await runPolymarketIngest();
