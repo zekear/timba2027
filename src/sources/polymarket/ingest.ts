@@ -6,17 +6,36 @@ import { normalizeEvent } from './normalize.js';
 
 const TAG_SLUGS = ['argentina'];
 
-export async function runPolymarketIngest(): Promise<{ markets: number; prices: number }> {
+/**
+ * Whitelist de slugs relevantes. El tag 'argentina' devuelve TODOS los
+ * mercados AR (FIFA, judiciales, dólar, etc) — solo queremos los
+ * electorales y los de inflación.
+ */
+function isRelevantEvent(slug: string): boolean {
+  // Electorales / presidenciales
+  if (/election|presidencial|president|legislativ|gobernador|gubernatura/i.test(slug)) return true;
+  // Inflación AR
+  if (/inflation|inflaci/i.test(slug)) return true;
+  return false;
+}
+
+export async function runPolymarketIngest(): Promise<{ markets: number; prices: number; skipped: number }> {
   const start = Date.now();
   const seen = new Set<string>();
   let marketsCount = 0;
   let pricesCount = 0;
+  let skipped = 0;
 
   for (const tag of TAG_SLUGS) {
     const events = await fetchEventsByTag(tag);
     for (const event of events) {
       if (seen.has(event.id)) continue;
       seen.add(event.id);
+
+      if (!isRelevantEvent(event.slug)) {
+        skipped++;
+        continue;
+      }
 
       const { market, prices } = normalizeEvent(event);
 
@@ -44,8 +63,8 @@ export async function runPolymarketIngest(): Promise<{ markets: number; prices: 
   }
 
   logger.info(
-    { marketsCount, pricesCount, ms: Date.now() - start },
+    { marketsCount, pricesCount, skipped, ms: Date.now() - start },
     'polymarket: ingest complete',
   );
-  return { markets: marketsCount, prices: pricesCount };
+  return { markets: marketsCount, prices: pricesCount, skipped };
 }
