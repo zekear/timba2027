@@ -1,0 +1,1 @@
+ALTER TYPE "public"."bot_post_status" ADD VALUE 'approved' BEFORE 'scheduled';

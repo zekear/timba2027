@@ -13,6 +13,8 @@ import { runNewPollWatcher } from '../trigger/watchers/new-poll.js';
 import { runHotNewsWatcher } from '../trigger/watchers/hot-news.js';
 import { runTriggerOrchestrator } from '../trigger/orchestrator.js';
 import { runMorningBrief } from '../trigger/morning-brief.js';
+import { runPublisher } from '../publish/publisher.js';
+import { schedulePost } from '../publish/transitions.js';
 
 /**
  * Wrapper para que un cron job no se solape con sí mismo si tarda más de
@@ -91,11 +93,35 @@ async function main() {
   cron.schedule('0 12 * * *', singleflight('morning-brief', () =>
     runMorningBrief().then(() => undefined)));
 
+  // Soft-launch delay: approved → scheduled tras SOFT_LAUNCH_DELAY_SEC.
+  // Cron cada 30s. Cap implícito por LIMIT 10.
+  cron.schedule('*/30 * * * * *', singleflight('soft-launch-delay', async () => {
+    const result = await db.execute(sql`
+      SELECT id FROM bot_posts
+      WHERE status = 'approved'
+        AND generated_at <= NOW() - (${env.SOFT_LAUNCH_DELAY_SEC} || ' seconds')::interval
+      LIMIT 10
+    `);
+    for (const row of result.rows as Array<{ id: number }>) {
+      try {
+        await schedulePost(row.id);
+      } catch (err) {
+        logger.warn({ postId: row.id, err: (err as Error).message }, 'soft-launch: schedule failed');
+      }
+    }
+  }));
+
+  // Publisher: cada minuto consume scheduled posts hacia X (cuando mode lo permite).
+  cron.schedule('* * * * *', singleflight('publisher', () => runPublisher().then(() => undefined)));
+
   logger.info(
     {
       polymarket_min: env.POLYMARKET_POLL_INTERVAL_MIN,
       news_min: env.NEWS_POLL_INTERVAL_MIN,
       polls_hours: env.POLLS_POLL_INTERVAL_HOURS,
+      publish_mode: env.PUBLISH_MODE,
+      kill_switch: env.KILL_SWITCH,
+      soft_launch_delay_sec: env.SOFT_LAUNCH_DELAY_SEC,
     },
     'orchestrator: schedules registered',
   );

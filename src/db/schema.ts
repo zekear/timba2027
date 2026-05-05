@@ -152,6 +152,16 @@ export const polls = pgTable(
 );
 
 // ──────────────────────────────────────────────────────────────────
+// Admin state (singleton key-value para runtime toggles)
+// ──────────────────────────────────────────────────────────────────
+
+export const adminState = pgTable('admin_state', {
+  key: text('key').primaryKey(),
+  value: text('value').notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+// ──────────────────────────────────────────────────────────────────
 // Bot posts (cards + captions generadas por el trigger engine)
 // ──────────────────────────────────────────────────────────────────
 
@@ -164,6 +174,7 @@ export const botPostShapeEnum = pgEnum('bot_post_shape', [
 
 export const botPostStatusEnum = pgEnum('bot_post_status', [
   'draft',
+  'approved',
   'scheduled',
   'published',
   'killed',

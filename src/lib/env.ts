@@ -17,6 +17,12 @@ const schema = z.object({
   POLLS_POLL_INTERVAL_HOURS: z.coerce.number().int().positive().default(6),
   X_API_BEARER_TOKEN: z.string().optional(),
   X_API_BASE: z.string().url().default('https://api.twitter.com/2'),
+  PUBLISH_MODE: z.enum(['shadow', 'soft', 'full']).default('shadow'),
+  KILL_SWITCH: z.coerce.boolean().default(false),
+  BOT_HANDLE: z.string().default('@politica'),
+  SOFT_LAUNCH_DELAY_SEC: z.coerce.number().int().nonnegative().default(60),
+  ADMIN_BASIC_AUTH_USER: z.string().optional(),
+  ADMIN_BASIC_AUTH_PASS: z.string().optional(),
 });
 
 const parsed = schema.safeParse(process.env);
