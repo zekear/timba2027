@@ -164,6 +164,7 @@ export const botPostShapeEnum = pgEnum('bot_post_shape', [
 
 export const botPostStatusEnum = pgEnum('bot_post_status', [
   'draft',
+  'approved',
   'scheduled',
   'published',
   'killed',

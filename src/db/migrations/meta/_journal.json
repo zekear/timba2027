@@ -29,6 +29,13 @@
       "when": 1777939804049,
       "tag": "0003_lazy_korvac",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1777947573501,
+      "tag": "0004_nebulous_switch",
+      "breakpoints": true
     }
   ]
 }
