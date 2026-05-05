@@ -19,7 +19,9 @@ const SHAPE_LABEL: Record<string, string> = {
 export function PostCard({ id, shape, caption, cardPath, publishedAt }: PublicPostProps) {
   const cardFile = basename(cardPath);
   const cardUrl = `/api/cards/${encodeURIComponent(cardFile)}`;
-  const ts = publishedAt ? publishedAt.toLocaleDateString('es-AR') : 's/d';
+  const ts = publishedAt
+    ? publishedAt.toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })
+    : 's/d';
   return (
     <article className="border-b border-hairline pb-6 mb-6">
       <div className="font-mono text-xs uppercase tracking-wide text-caption mb-2">

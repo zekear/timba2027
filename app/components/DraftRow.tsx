@@ -22,7 +22,7 @@ export function DraftRow(p: DraftRowProps) {
         <img src={cardUrl} alt="" className="w-48 h-27 border border-ink object-cover" />
         <div className="flex-1 min-w-0">
           <div className="font-mono text-xs uppercase tracking-wide text-caption">
-            {p.shape} · #{p.id} · {p.generatedAt.toLocaleString('es-AR')}
+            {p.shape} · #{p.id} · {p.generatedAt.toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })}
             {p.candidateFocus ? ` · focus: ${p.candidateFocus}` : null}
             {p.llmSource ? ` · caption: ${p.llmSource}` : null}
           </div>

@@ -27,7 +27,7 @@ export default async function PostDetail({
 
       <header className="border-b-2 border-ink pb-4 mb-6 mt-4">
         <div className="font-mono text-xs uppercase tracking-wide text-caption">
-          #{p.id} · {p.shape} · status={p.status} · {p.generatedAt.toLocaleString('es-AR')}
+          #{p.id} · {p.shape} · status={p.status} · {p.generatedAt.toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })}
           {p.candidateFocus ? ` · focus: ${p.candidateFocus}` : null}
         </div>
       </header>

@@ -66,7 +66,7 @@ export default async function PublicPost({
           ← home
         </Link>
         <div className="font-mono text-xs uppercase tracking-wide text-caption mb-3">
-          {SHAPE_LABEL[p.shape] ?? p.shape} · #{p.id} · {p.publishedAt?.toLocaleDateString('es-AR') ?? 's/d'}
+          {SHAPE_LABEL[p.shape] ?? p.shape} · #{p.id} · {p.publishedAt?.toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' }) ?? 's/d'}
         </div>
 
         <img src={cardUrl} alt="" className="w-full border-2 border-ink mb-8" />
