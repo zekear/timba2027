@@ -7,6 +7,17 @@ import { logger } from '../lib/logger.js';
 import { uploadMedia, createTweet } from './x-write-client.js';
 import { markPublished } from './transitions.js';
 import { policyForMode, type PublishMode } from './modes.js';
+import { adminState } from '../db/schema.js';
+
+async function loadAdminOverrides(): Promise<{ mode?: string; killSwitch?: boolean }> {
+  const rows = await db.select().from(adminState);
+  const map: Record<string, string> = {};
+  for (const r of rows) map[r.key] = r.value;
+  return {
+    mode: map.publish_mode,
+    killSwitch: map.kill_switch === 'true' ? true : map.kill_switch === 'false' ? false : undefined,
+  };
+}
 
 const MAX_PER_RUN = 3;
 
@@ -29,12 +40,15 @@ export async function runPublisher(): Promise<PublisherStats> {
     skippedMode: 0,
   };
 
-  // Re-leer env vars (permite override en tests via process.env)
-  const mode = (process.env.PUBLISH_MODE ?? env.PUBLISH_MODE) as PublishMode;
+  // admin_state overrides env vars (allows runtime toggle from /admin)
+  const overrides = await loadAdminOverrides();
+  const mode = (overrides.mode ?? process.env.PUBLISH_MODE ?? env.PUBLISH_MODE) as PublishMode;
   const killSwitch =
-    process.env.KILL_SWITCH !== undefined
-      ? process.env.KILL_SWITCH === 'true'
-      : env.KILL_SWITCH;
+    overrides.killSwitch !== undefined
+      ? overrides.killSwitch
+      : process.env.KILL_SWITCH !== undefined
+        ? process.env.KILL_SWITCH === 'true'
+        : env.KILL_SWITCH;
 
   if (killSwitch) {
     stats.skippedKillSwitch = await countScheduled();
