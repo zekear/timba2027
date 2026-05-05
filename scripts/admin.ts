@@ -65,8 +65,16 @@ async function setKillSwitch(value: string): Promise<void> {
 async function publishNow(id: number): Promise<void> {
   const [p] = await db.select().from(botPosts).where(eq(botPosts.id, id));
   if (!p) { console.error(`No bot_post ${id}`); process.exit(1); }
-  if (p.status === 'draft') await approveDraft(id);
-  if (p.status === 'approved' || p.status === 'draft') await schedulePost(id);
+  let effectiveStatus: string = p.status;
+  if (effectiveStatus === 'draft') {
+    await approveDraft(id);
+    effectiveStatus = 'approved';
+  }
+  if (effectiveStatus !== 'approved') {
+    console.error(`Cannot publish-now from status=${p.status}`);
+    process.exit(1);
+  }
+  await schedulePost(id);
   console.log(`#${id} → scheduled (publisher worker lo enviará en próximo tick)`);
 }
 

@@ -18,9 +18,19 @@ export async function POST(
   try {
     const [p] = await db.select().from(botPosts).where(eq(botPosts.id, numId));
     if (!p) return NextResponse.json({ ok: false, error: 'not found' }, { status: 404 });
-    if (p.status === 'draft') await approveDraft(numId);
-    if (p.status === 'approved' || p.status === 'draft') await schedulePost(numId);
-    return NextResponse.json({ ok: true });
+    let effectiveStatus = p.status;
+    if (effectiveStatus === 'draft') {
+      await approveDraft(numId);
+      effectiveStatus = 'approved';
+    }
+    if (effectiveStatus === 'approved') {
+      await schedulePost(numId);
+      return NextResponse.json({ ok: true });
+    }
+    return NextResponse.json(
+      { ok: false, error: `cannot publish-now from status=${p.status}` },
+      { status: 400 },
+    );
   } catch (err) {
     return NextResponse.json({ ok: false, error: (err as Error).message }, { status: 400 });
   }

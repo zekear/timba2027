@@ -8,8 +8,9 @@ export async function GET(): Promise<NextResponse> {
   const rows = await db.select().from(adminState);
   const result: Record<string, string> = {};
   for (const r of rows) result[r.key] = r.value;
-  // Defaults si la fila no existe todavía
-  result.kill_switch = result.kill_switch ?? 'false';
+  // Defaults: cuando admin_state está vacío, mostrar lo que el publisher
+  // realmente usa (env vars), no un default arbitrario.
+  result.kill_switch = result.kill_switch ?? process.env.KILL_SWITCH ?? 'false';
   result.publish_mode = result.publish_mode ?? process.env.PUBLISH_MODE ?? 'shadow';
   return NextResponse.json(result);
 }
