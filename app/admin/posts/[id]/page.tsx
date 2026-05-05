@@ -1,9 +1,9 @@
 import { eq } from 'drizzle-orm';
 import { basename } from 'node:path';
 import Link from 'next/link';
-import { db } from '../../../src/db/client.js';
-import { botPosts } from '../../../src/db/schema.js';
-import { ActionButtons } from '../../components/ActionButtons.js';
+import { db } from '../../../../src/db/client.js';
+import { botPosts } from '../../../../src/db/schema.js';
+import { ActionButtons } from '../../../components/ActionButtons.js';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,7 +15,7 @@ export default async function PostDetail({
   const { id } = await params;
   const numId = Number(id);
   const [p] = await db.select().from(botPosts).where(eq(botPosts.id, numId));
-  if (!p) return <main className="p-8">Not found · <Link href="/" className="text-accent underline">back</Link></main>;
+  if (!p) return <main className="p-8">Not found · <Link href="/admin" className="text-accent underline">back</Link></main>;
 
   const cardFile = basename(p.cardPath);
   const cardUrl = `/api/cards/${encodeURIComponent(cardFile)}`;
@@ -23,7 +23,7 @@ export default async function PostDetail({
 
   return (
     <main className="max-w-4xl mx-auto p-8">
-      <Link href="/" className="font-mono text-xs uppercase tracking-wide text-accent underline">← back to queue</Link>
+      <Link href="/admin" className="font-mono text-xs uppercase tracking-wide text-accent underline">← back to queue</Link>
 
       <header className="border-b-2 border-ink pb-4 mb-6 mt-4">
         <div className="font-mono text-xs uppercase tracking-wide text-caption">

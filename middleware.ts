@@ -1,10 +1,30 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
+/**
+ * Basic auth gate solo para:
+ *   - /admin/*  (drafts queue, settings, post detail con actions)
+ *   - /api/admin/*  (toggle kill switch + mode)
+ *   - /api/posts/*  (approve/kill/publish-now actions)
+ *
+ * Todo el resto (root, /posts, /c, /encuestadora, /2027, /api/cards) es público.
+ */
+
+const PROTECTED_PATTERNS = [
+  /^\/admin(\/|$)/,
+  /^\/api\/admin(\/|$)/,
+  /^\/api\/posts(\/|$)/,
+];
+
 export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
+
+  // Static + favicon: bypass siempre
   if (path.startsWith('/_next/') || path === '/favicon.ico') {
     return NextResponse.next();
   }
+
+  const isProtected = PROTECTED_PATTERNS.some((rx) => rx.test(path));
+  if (!isProtected) return NextResponse.next();
 
   const expectedUser = process.env.ADMIN_BASIC_AUTH_USER;
   const expectedPass = process.env.ADMIN_BASIC_AUTH_PASS;
