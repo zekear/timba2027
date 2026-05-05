@@ -108,6 +108,7 @@ export const pollsters = pgTable('pollsters', {
   displayName: text('display_name').notNull(),   // 'Opinaia'
   xHandle: text('x_handle').notNull().unique(),  // 'opinaiagency' (sin @)
   xUserId: text('x_user_id'),                    // populated después del primer fetch
+  lastSeenTweetId: text('last_seen_tweet_id'),
   active: boolean('active').notNull().default(true),
   notes: text('notes'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),

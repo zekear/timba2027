@@ -39,8 +39,23 @@ export async function runPollsIngest(): Promise<PollsIngestStats> {
         logger.info({ pollster: p.slug, handle: p.xHandle, xUserId }, 'polls: resolved x_user_id');
       }
 
-      const page = await getUserTimeline(xUserId, { maxResults: TWEETS_PER_POLLSTER });
+      const page = await getUserTimeline(xUserId, {
+        maxResults: TWEETS_PER_POLLSTER,
+        sinceId: p.lastSeenTweetId ?? undefined,
+      });
       stats.tweetsSeen += page.tweets.length;
+
+      // Update checkpoint to the highest tweet id we saw (X snowflake ids are
+      // strings of equal length where lexicographic order matches numeric order)
+      if (page.tweets.length > 0) {
+        const maxId = page.tweets.reduce(
+          (acc, t) => (t.id > acc ? t.id : acc),
+          page.tweets[0].id,
+        );
+        if (!p.lastSeenTweetId || maxId > p.lastSeenTweetId) {
+          await db.update(pollsters).set({ lastSeenTweetId: maxId }).where(eq(pollsters.id, p.id));
+        }
+      }
 
       for (const tweet of page.tweets) {
         const mediaKeys = tweet.attachments?.media_keys ?? [];
