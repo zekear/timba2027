@@ -5,7 +5,11 @@ import { events } from '../../src/db/schema.js';
 import { emitEvent, claimNextPendingEvent, markEventProcessed } from '../../src/trigger/events.js';
 
 beforeEach(async () => {
+  // Clean test-prefixed events. Real events (MARKET_MOVE etc) emitted by other
+  // tests/runs get marked 'processed' so claimNextPendingEvent has a clean view —
+  // we don't delete them because they're useful for diagnostics in the DB.
   await db.execute(sql`DELETE FROM events WHERE type LIKE 'TEST_%'`);
+  await db.execute(sql`UPDATE events SET status = 'processed', processed_at = NOW() WHERE status = 'pending'`);
 });
 
 describe('emitEvent', () => {
