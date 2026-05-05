@@ -13,7 +13,7 @@ export function morningBriefCard(input: {
   const { topCandidates, marketDate, timestamp, handle } = input;
   const bars = topCandidates.slice(0, 5).map((c) => ({
     label: c.deltaPct != null
-      ? `${c.candidato}  ${c.deltaPct >= 0 ? '↑' : '↓'}${Math.abs(c.deltaPct).toFixed(1)}`
+      ? `${c.candidato}  ${c.deltaPct >= 0 ? '▲' : '▼'}${Math.abs(c.deltaPct).toFixed(1)}`
       : c.candidato,
     pct: c.pct,
   }));

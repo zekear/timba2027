@@ -12,7 +12,7 @@ export function marketMoveCard(input: {
 }): CardElement {
   const { event, context, timestamp, handle } = input;
   const sign = event.deltaPct >= 0 ? '+' : '';
-  const arrow = event.deltaPct >= 0 ? '↑' : '↓';
+  const arrow = event.deltaPct >= 0 ? '▲' : '▼';
 
   return frame([
     Ribbon('POLYMARKET MOVE'),
