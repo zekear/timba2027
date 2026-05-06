@@ -43,6 +43,8 @@ export async function runMarketMoveWatcher(opts: {
 
     const payload: MarketMoveEvent = {
       marketId: move.marketId,
+      marketSlug: move.marketSlug,
+      marketQuestion: move.marketQuestion,
       candidate: move.candidate,
       priceNow: move.priceNow,
       priceThen: move.priceThen,

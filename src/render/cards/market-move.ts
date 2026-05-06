@@ -4,6 +4,42 @@ import { frame, type CardElement } from '../compose.js';
 import { colors, fonts, sizes } from '../tokens.js';
 import type { MarketMoveEvent } from '../../trigger/types.js';
 
+/**
+ * Categorizar mercado para elegir Ribbon label + sub-context legible.
+ * Los slugs vienen de Polymarket Gamma API.
+ */
+function marketContext(slug?: string, question?: string): {
+  ribbon: string;
+  contextLine: string;
+  isElectoral: boolean;
+} {
+  if (!slug) {
+    return { ribbon: 'POLYMARKET MOVE', contextLine: '', isElectoral: true };
+  }
+  if (/inflation/i.test(slug)) {
+    if (/monthly|monthly-inflation-april/i.test(slug)) {
+      return {
+        ribbon: 'INFLACIÓN MENSUAL · ABRIL',
+        contextLine: 'Probabilidad de que el IPC mensual de abril caiga en este rango.',
+        isElectoral: false,
+      };
+    }
+    return {
+      ribbon: 'INFLACIÓN ANUAL · 2026',
+      contextLine: 'Probabilidad de que la inflación anual 2026 caiga en este rango.',
+      isElectoral: false,
+    };
+  }
+  if (/presidential|president|election/i.test(slug)) {
+    return {
+      ribbon: 'POLYMARKET · PRESIDENCIA 2027',
+      contextLine: question ?? 'Mercado de elección presidencial argentina 2027.',
+      isElectoral: true,
+    };
+  }
+  return { ribbon: 'POLYMARKET MOVE', contextLine: question ?? '', isElectoral: true };
+}
+
 export function marketMoveCard(input: {
   event: MarketMoveEvent;
   context?: { latestPollPct?: number; latestPollSource?: string };
@@ -13,9 +49,12 @@ export function marketMoveCard(input: {
   const { event, context, timestamp, handle } = input;
   const sign = event.deltaPct >= 0 ? '+' : '';
   const arrow = event.deltaPct >= 0 ? '▲' : '▼';
+  const { ribbon, contextLine, isElectoral } = marketContext(event.marketSlug, event.marketQuestion);
+  const ribbonSourceLabel = ribbon.includes('PRESIDENCIA') ? 'POLYMARKET' : ribbon;
+  const subjectLabel = isElectoral ? event.candidate : `Rango ${event.candidate}`;
 
   return frame([
-    Ribbon('POLYMARKET MOVE'),
+    Ribbon(ribbon),
     {
       type: 'div',
       props: {
@@ -31,12 +70,37 @@ export function marketMoveCard(input: {
             type: 'div',
             props: {
               style: {
-                fontFamily: fonts.display,
-                fontSize: sizes.display,
-                lineHeight: 1.0,
-                color: colors.pageInk,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 16,
               },
-              children: `${event.candidate} ${arrow} ${sign}${event.deltaPct.toFixed(1)}pp`,
+              children: [
+                {
+                  type: 'div',
+                  props: {
+                    style: {
+                      fontFamily: fonts.mono,
+                      fontSize: sizes.kicker,
+                      color: colors.caption,
+                      textTransform: 'uppercase',
+                      letterSpacing: '1.0px',
+                    },
+                    children: contextLine,
+                  },
+                },
+                {
+                  type: 'div',
+                  props: {
+                    style: {
+                      fontFamily: fonts.display,
+                      fontSize: sizes.display,
+                      lineHeight: 1.0,
+                      color: colors.pageInk,
+                    },
+                    children: `${subjectLabel} ${arrow} ${sign}${event.deltaPct.toFixed(1)}pp`,
+                  },
+                },
+              ],
             },
           },
           {
@@ -48,7 +112,7 @@ export function marketMoveCard(input: {
                 color: colors.pageInk,
                 lineHeight: 1.4,
               },
-              children: `Mercado actual ${(event.priceNow * 100).toFixed(1)}% (${event.windowHours}h)${
+              children: `Probabilidad actual ${(event.priceNow * 100).toFixed(1)}% · cambio en últimas ${event.windowHours}h${
                 context?.latestPollPct != null
                   ? ` · Encuesta más cercana: ${context.latestPollPct.toFixed(1)}%${
                       context.latestPollSource ? ` (${context.latestPollSource})` : ''
@@ -60,6 +124,6 @@ export function marketMoveCard(input: {
         ],
       },
     },
-    Footer(timestamp, 'POLYMARKET', handle),
+    Footer(timestamp, ribbonSourceLabel, handle),
   ]);
 }

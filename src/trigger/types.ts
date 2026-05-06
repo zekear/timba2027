@@ -4,6 +4,8 @@ import { z } from 'zod';
 
 export const marketMoveEventSchema = z.object({
   marketId: z.string(),
+  marketSlug: z.string().optional(),       // ej: 'argentina-presidential-election-winner'
+  marketQuestion: z.string().optional(),   // ej: 'Who will win the 2027 Argentine presidential election?'
   candidate: z.string(),
   priceNow: z.number(),
   priceThen: z.number(),

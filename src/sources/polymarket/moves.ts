@@ -4,6 +4,8 @@ import { logger } from '../../lib/logger.js';
 
 export interface MarketMove {
   marketId: string;
+  marketSlug?: string;
+  marketQuestion?: string;
   candidate: string;
   priceNow: number;
   priceThen: number;
@@ -46,17 +48,22 @@ export async function detectMoves(opts: {
     )
     SELECT
       l.market_id,
+      m.slug AS market_slug,
+      m.question AS market_question,
       l.candidate,
       l.price AS price_now,
       e.price AS price_then,
       (l.price - e.price) * 100 AS delta_pct
     FROM latest l
     JOIN earlier e USING (market_id, candidate)
+    JOIN markets m ON m.id = l.market_id
     WHERE ABS(l.price - e.price) * 100 >= ${thresholdPct};
   `);
 
   const moves: MarketMove[] = (rows.rows as Array<Record<string, unknown>>).map((r) => ({
     marketId: r.market_id as string,
+    marketSlug: (r.market_slug as string) ?? undefined,
+    marketQuestion: (r.market_question as string) ?? undefined,
     candidate: r.candidate as string,
     priceNow: Number(r.price_now),
     priceThen: Number(r.price_then),
