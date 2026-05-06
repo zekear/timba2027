@@ -4,6 +4,7 @@
  */
 import { renderToPng } from '../src/render/compose.js';
 import { marketMoveCard } from '../src/render/cards/market-move.js';
+import { hotNewsCard } from '../src/render/cards/hot-news.js';
 
 const ts = '14:32 GMT-3';
 const handle = '@ezeqmina';
@@ -65,5 +66,19 @@ await renderToPng(
   'preview-electoral',
 );
 
-console.log('Done. 3 PNGs en storage/cards/preview-*.png');
+// Hot news con headline larga (case real reportado)
+await renderToPng(
+  hotNewsCard({
+    source: 'lanacion',
+    headline:
+      'El Gobierno analiza cambios en la reforma política: separaría ficha limpia y haría opcionales las primarias en distritos chicos',
+    candidatesMentioned: ['Patricia Bullrich'],
+    correlatedMove: null,
+    timestamp: '07:22 GMT-3',
+    handle,
+  }),
+  'preview-hotnews-long',
+);
+
+console.log('Done. 4 PNGs en storage/cards/preview-*.png');
 process.exit(0);

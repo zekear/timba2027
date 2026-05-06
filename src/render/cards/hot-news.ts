@@ -38,7 +38,7 @@ export function hotNewsCard(input: {
                 lineHeight: 1.1,
                 color: colors.pageInk,
               },
-              children: headline.length > 100 ? `${headline.slice(0, 97)}...` : headline,
+              children: headline.length > 200 ? `${headline.slice(0, 197)}…` : headline,
             },
           },
           {
