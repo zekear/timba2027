@@ -51,13 +51,16 @@ export async function canPostNow(opts: {
   candidateFocus: string | null;
   cooldownHours?: number;
   bypassQuietHours?: boolean;
+  bypassDailyCap?: boolean;
 }): Promise<CanPostResult> {
   if (!opts.bypassQuietHours && isQuietHour(opts.now)) {
     return { ok: false, reason: 'quiet_hour' };
   }
-  const count = await dailyPostCount();
-  if (count >= DAILY_CAP) {
-    return { ok: false, reason: 'daily_cap' };
+  if (!opts.bypassDailyCap) {
+    const count = await dailyPostCount();
+    if (count >= DAILY_CAP) {
+      return { ok: false, reason: 'daily_cap' };
+    }
   }
   if (opts.candidateFocus) {
     const cd = await candidateCooldownActive(opts.candidateFocus, {

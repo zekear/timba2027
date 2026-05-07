@@ -81,7 +81,7 @@ async function handleMarketMove(
 ): Promise<{ ok: true; postId: number } | { ok: false; reason: string }> {
   // bypassQuietHours: drafts pueden generarse 24/7. Quiet hours
   // solo aplican en publish (publisher.ts → policyForMode + caps).
-  const cap = await canPostNow({ now: new Date(), candidateFocus: payload.candidate, bypassQuietHours: true });
+  const cap = await canPostNow({ now: new Date(), candidateFocus: payload.candidate, bypassQuietHours: true, bypassDailyCap: true });
   if (!cap.ok) return { ok: false, reason: cap.reason ?? 'cap_unknown' };
 
   const card = marketMoveCard({
@@ -121,7 +121,7 @@ async function handleNewPoll(
   eventId: number,
   payload: ReturnType<typeof newPollEventSchema.parse>,
 ): Promise<{ ok: true; postId: number } | { ok: false; reason: string }> {
-  const cap = await canPostNow({ now: new Date(), candidateFocus: payload.topCandidate, bypassQuietHours: true });
+  const cap = await canPostNow({ now: new Date(), candidateFocus: payload.topCandidate, bypassQuietHours: true, bypassDailyCap: true });
   if (!cap.ok) return { ok: false, reason: cap.reason ?? 'cap_unknown' };
 
   const [poll] = await db.select().from(polls).where(eq(polls.id, payload.pollId));
@@ -173,7 +173,7 @@ async function handleHotNews(
   payload: ReturnType<typeof hotNewsEventSchema.parse>,
 ): Promise<{ ok: true; postId: number } | { ok: false; reason: string }> {
   const focusCandidate = payload.candidatesMentioned[0] ?? null;
-  const cap = await canPostNow({ now: new Date(), candidateFocus: focusCandidate, bypassQuietHours: true });
+  const cap = await canPostNow({ now: new Date(), candidateFocus: focusCandidate, bypassQuietHours: true, bypassDailyCap: true });
   if (!cap.ok) return { ok: false, reason: cap.reason ?? 'cap_unknown' };
 
   const card = hotNewsCard({
