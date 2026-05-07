@@ -24,6 +24,7 @@ const schema = z.object({
   ADMIN_BASIC_AUTH_USER: z.string().optional(),
   ADMIN_BASIC_AUTH_PASS: z.string().optional(),
   SITE_URL: z.string().url().default('http://localhost:3000'),
+  DAILY_PUBLISH_CAP: z.coerce.number().int().positive().default(30),
 });
 
 const parsed = schema.safeParse(process.env);

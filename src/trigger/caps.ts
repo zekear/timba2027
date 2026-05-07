@@ -1,7 +1,11 @@
 import { sql } from 'drizzle-orm';
 import { db } from '../db/client.js';
+import { env } from '../lib/env.js';
 
-const DAILY_CAP = 6;
+// Cap de publicación por día. Se aplica solo al publisher (drafts
+// usan bypassDailyCap). Default 30 — el usuario aprueba qué se
+// postea, así que la barrera real es manual. Configurable via
+// DAILY_PUBLISH_CAP env var.
 const QUIET_START_HOUR = 1;
 const QUIET_END_HOUR = 7;
 
@@ -58,7 +62,7 @@ export async function canPostNow(opts: {
   }
   if (!opts.bypassDailyCap) {
     const count = await dailyPostCount();
-    if (count >= DAILY_CAP) {
+    if (count >= env.DAILY_PUBLISH_CAP) {
       return { ok: false, reason: 'daily_cap' };
     }
   }
