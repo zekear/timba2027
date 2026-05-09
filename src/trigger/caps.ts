@@ -45,6 +45,32 @@ export async function candidateCooldownActive(
   return r.rows.length > 0;
 }
 
+const ELECTORAL_MARKET_SLUG = 'argentina-presidential-election-winner';
+
+/**
+ * Cooldown ajustado por tier. Frontrunners de Polymarket pueden
+ * postearse más seguido (1h); mid-tier 4h (default); fringe / inflation
+ * buckets / nombres no encontrados, 12h.
+ *
+ * El threshold se calcula sobre el último precio en el mercado
+ * presidencial principal. Auto-tunea: si un candidato sube en el
+ * mercado, su cooldown baja sin tocar código.
+ */
+export async function cooldownHoursForCandidate(candidate: string): Promise<number> {
+  const r = await db.execute(sql`
+    SELECT mp.price::float * 100 AS pct
+    FROM market_prices mp
+    JOIN markets m ON m.id = mp.market_id
+    WHERE m.slug = ${ELECTORAL_MARKET_SLUG} AND mp.candidate = ${candidate}
+    ORDER BY mp.ts DESC
+    LIMIT 1
+  `);
+  const pct = (r.rows[0] as { pct: number } | undefined)?.pct ?? 0;
+  if (pct >= 10) return 1;
+  if (pct >= 2) return 4;
+  return 12;
+}
+
 export interface CanPostResult {
   ok: boolean;
   reason?: string;
@@ -67,9 +93,8 @@ export async function canPostNow(opts: {
     }
   }
   if (opts.candidateFocus) {
-    const cd = await candidateCooldownActive(opts.candidateFocus, {
-      hours: opts.cooldownHours ?? 4,
-    });
+    const hours = opts.cooldownHours ?? (await cooldownHoursForCandidate(opts.candidateFocus));
+    const cd = await candidateCooldownActive(opts.candidateFocus, { hours });
     if (cd) return { ok: false, reason: 'candidate_cooldown' };
   }
   return { ok: true };
