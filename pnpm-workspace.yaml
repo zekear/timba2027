@@ -1,2 +1,7 @@
 patchedDependencies:
   '@shuding/opentype.js@1.4.0-beta.0': patches/@shuding__opentype.js@1.4.0-beta.0.patch
+
+onlyBuiltDependencies:
+  - sharp
+  - esbuild
+  - "@resvg/resvg-js"
