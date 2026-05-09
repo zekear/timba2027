@@ -21,10 +21,6 @@ export function Footer() {
             @{handle}
           </a>
           {' · '}
-          <a href="https://github.com/ezeqmina/ar-elections-2027" className="text-accent underline">
-            code
-          </a>
-          {' · '}
           <a href="/admin" className="text-accent underline">
             admin
           </a>
