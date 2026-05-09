@@ -35,18 +35,25 @@ export function frame(children: CardElement[]): CardElement {
 /**
  * Renderiza un element-tree de Satori a PNG y lo escribe a storage/cards/<id>.png.
  * Devuelve el path absoluto y el path relativo (para guardar en DB).
+ *
+ * Default 1200×675 (Twitter card). Override width/height via opts para
+ * logos cuadrados, banners, etc. Width/height del CardElement deben
+ * coincidir con los pasados acá (sino aparecen letterbox/clipping).
  */
 export async function renderToPng(
   card: CardElement,
   filenameWithoutExt: string,
+  opts: { width?: number; height?: number } = {},
 ): Promise<{ absPath: string; relPath: string }> {
+  const width = opts.width ?? sizes.cardWidth;
+  const height = opts.height ?? sizes.cardHeight;
   const fonts = loadFonts() as unknown as Parameters<typeof satori>[1]['fonts'];
   const svg = await satori(card as unknown as Parameters<typeof satori>[0], {
-    width: sizes.cardWidth,
-    height: sizes.cardHeight,
+    width,
+    height,
     fonts,
   });
-  const resvg = new Resvg(svg, { fitTo: { mode: 'width', value: sizes.cardWidth } });
+  const resvg = new Resvg(svg, { fitTo: { mode: 'width', value: width } });
   const pngBuffer = resvg.render().asPng();
 
   const absPath = resolve(STORAGE_DIR, `${filenameWithoutExt}.png`);

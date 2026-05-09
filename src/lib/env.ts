@@ -19,11 +19,11 @@ const schema = z.object({
   X_API_BASE: z.string().url().default('https://api.twitter.com/2'),
   PUBLISH_MODE: z.enum(['shadow', 'soft', 'full']).default('shadow'),
   KILL_SWITCH: z.coerce.boolean().default(false),
-  BOT_HANDLE: z.string().default('@politica'),
+  BOT_HANDLE: z.string().default('@Timba2027'),
   SOFT_LAUNCH_DELAY_SEC: z.coerce.number().int().nonnegative().default(60),
   ADMIN_BASIC_AUTH_USER: z.string().optional(),
   ADMIN_BASIC_AUTH_PASS: z.string().optional(),
-  SITE_URL: z.string().url().default('http://localhost:3000'),
+  SITE_URL: z.string().url().default('https://timba2027.ar'),
   DAILY_PUBLISH_CAP: z.coerce.number().int().positive().default(30),
 });
 

@@ -6,6 +6,7 @@ import { renderToPng } from '../render/compose.js';
 import { morningBriefCard } from '../render/cards/morning-brief.js';
 import { generateCaption } from '../caption/generate.js';
 import { canPostNow } from './caps.js';
+import { env } from '../lib/env.js';
 
 export async function runMorningBrief(): Promise<{ ok: boolean; postId?: number; reason?: string }> {
   const cap = await canPostNow({ now: new Date(), candidateFocus: null });
@@ -59,7 +60,7 @@ export async function runMorningBrief(): Promise<{ ok: boolean; postId?: number;
     topCandidates: top,
     marketDate: dateStr,
     timestamp: '09:00 GMT-3',
-    handle: '@politica',
+    handle: env.BOT_HANDLE,
   });
 
   const filename = `morning-brief-${date.toISOString().slice(0, 10)}`;

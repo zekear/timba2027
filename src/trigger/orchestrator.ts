@@ -10,8 +10,9 @@ import { marketMoveCard } from '../render/cards/market-move.js';
 import { newPollCard } from '../render/cards/new-poll.js';
 import { hotNewsCard } from '../render/cards/hot-news.js';
 import { generateCaption } from '../caption/generate.js';
+import { env } from '../lib/env.js';
 
-const HANDLE = '@politica';
+const HANDLE = env.BOT_HANDLE;
 
 function nowStr(): string {
   const d = new Date();
