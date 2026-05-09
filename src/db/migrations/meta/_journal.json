@@ -43,6 +43,13 @@
       "when": 1777955200427,
       "tag": "0005_sturdy_gorilla_man",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1778335931610,
+      "tag": "0006_round_mockingbird",
+      "breakpoints": true
     }
   ]
 }

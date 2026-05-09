@@ -18,7 +18,7 @@ export default async function Home() {
       <header className="border-b-2 border-ink pb-4 mb-6">
         <h1 className="font-serif text-5xl">Review queue</h1>
         <div className="font-mono text-xs uppercase tracking-wide text-caption mt-2">
-          {drafts.length} drafts pending · <a href="/admin/settings" className="text-accent underline">settings</a>
+          {drafts.length} drafts pending · <a href="/admin/decisions" className="text-accent underline">decisiones</a> · <a href="/admin/settings" className="text-accent underline">settings</a>
         </div>
       </header>
 

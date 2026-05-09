@@ -90,6 +90,7 @@ export const events = pgTable(
     type: text('type').notNull(),                        // MARKET_MOVE | NEW_POLL | HOT_NEWS
     payload: jsonb('payload').notNull(),
     status: text('status').notNull().default('pending'), // pending | processed | discarded
+    discardReason: text('discard_reason'),                // populated cuando status = 'discarded'
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     processedAt: timestamp('processed_at', { withTimezone: true }),
   },

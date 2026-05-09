@@ -57,6 +57,8 @@ export async function markEventProcessed(id: number): Promise<void> {
 export async function markEventDiscarded(id: number, reason: string): Promise<void> {
   logger.info({ eventId: id, reason }, 'event: discarded');
   await db.execute(sql`
-    UPDATE events SET status = 'discarded', processed_at = NOW() WHERE id = ${id};
+    UPDATE events
+    SET status = 'discarded', processed_at = NOW(), discard_reason = ${reason}
+    WHERE id = ${id};
   `);
 }
