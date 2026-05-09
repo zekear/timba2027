@@ -49,9 +49,9 @@ export function marketMoveCard(input: {
   const { event, context, timestamp, handle } = input;
   const sign = event.deltaPct >= 0 ? '+' : '';
   const arrow = event.deltaPct >= 0 ? '▲' : '▼';
-  const { ribbon, contextLine, isElectoral } = marketContext(event.marketSlug, event.marketQuestion);
+  const { ribbon, contextLine } = marketContext(event.marketSlug, event.marketQuestion);
   const ribbonSourceLabel = ribbon.includes('PRESIDENCIA') ? 'POLYMARKET' : ribbon;
-  const subjectLabel = isElectoral ? event.candidate : `Rango ${event.candidate}`;
+  const subjectLabel = event.candidate;
 
   return frame([
     Ribbon(ribbon),
@@ -100,34 +100,26 @@ export function marketMoveCard(input: {
                     children: `${subjectLabel} ${arrow} ${sign}${event.deltaPct.toFixed(1)}pp`,
                   },
                 },
+                ...(event.siblings.length > 0 ? [siblingsList(event)] : []),
               ],
             },
           },
           {
             type: 'div',
             props: {
-              style: { display: 'flex', flexDirection: 'column', gap: 12 },
-              children: [
-                {
-                  type: 'div',
-                  props: {
-                    style: {
-                      fontFamily: fonts.body,
-                      fontSize: sizes.bodyLarge,
-                      color: colors.pageInk,
-                      lineHeight: 1.4,
-                    },
-                    children: `Probabilidad actual ${(event.priceNow * 100).toFixed(1)}% · cambio en últimas ${event.windowHours}h${
-                      context?.latestPollPct != null
-                        ? ` · Encuesta más cercana: ${context.latestPollPct.toFixed(1)}%${
-                            context.latestPollSource ? ` (${context.latestPollSource})` : ''
-                          }`
-                        : ''
-                    }`,
-                  },
-                },
-                ...(event.siblings.length > 0 ? [siblingsList(event, isElectoral)] : []),
-              ],
+              style: {
+                fontFamily: fonts.body,
+                fontSize: sizes.bodyLarge,
+                color: colors.pageInk,
+                lineHeight: 1.4,
+              },
+              children: `Probabilidad actual ${(event.priceNow * 100).toFixed(1)}% · cambio en últimas ${event.windowHours}h${
+                context?.latestPollPct != null
+                  ? ` · Encuesta más cercana: ${context.latestPollPct.toFixed(1)}%${
+                      context.latestPollSource ? ` (${context.latestPollSource})` : ''
+                    }`
+                  : ''
+              }`,
             },
           },
         ],
@@ -140,7 +132,7 @@ export function marketMoveCard(input: {
 /**
  * Lista co-moves del mismo mercado. Top 3 por |deltaPct|, formato compacto.
  */
-function siblingsList(event: MarketMoveEvent, isElectoral: boolean): CardElement {
+function siblingsList(event: MarketMoveEvent): CardElement {
   const top = event.siblings.slice(0, 3);
   return {
     type: 'div',
@@ -170,7 +162,7 @@ function siblingsList(event: MarketMoveEvent, isElectoral: boolean): CardElement
         ...top.map((s) => {
           const sign = s.deltaPct >= 0 ? '+' : '';
           const arrow = s.deltaPct >= 0 ? '▲' : '▼';
-          const subject = isElectoral ? s.candidate : `Rango ${s.candidate}`;
+          const subject = s.candidate;
           return {
             type: 'div',
             props: {
