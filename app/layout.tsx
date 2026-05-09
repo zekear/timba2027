@@ -15,6 +15,9 @@ export const metadata = {
     images: ['/og-default.png'],
   },
   twitter: { card: 'summary_large_image' },
+  alternates: {
+    types: { 'application/atom+xml': '/feed.xml' },
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

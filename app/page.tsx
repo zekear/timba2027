@@ -69,9 +69,14 @@ export default async function Home() {
         )}
 
         <section>
-          <h2 className="font-mono text-xs uppercase tracking-wide font-bold border-b-2 border-ink pb-2 mb-4">
-            Últimos posts del bot
-          </h2>
+          <div className="flex items-baseline justify-between border-b-2 border-ink pb-2 mb-4">
+            <h2 className="font-mono text-xs uppercase tracking-wide font-bold">
+              Últimos posts del bot
+            </h2>
+            <Link href={'/posts' as never} className="font-mono text-xs uppercase tracking-wide text-accent underline">
+              ver todos →
+            </Link>
+          </div>
           {recentPosts.length === 0 ? (
             <p className="font-serif text-lg text-caption">No hay posts publicados todavía.</p>
           ) : (
