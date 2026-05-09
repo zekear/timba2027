@@ -1,5 +1,9 @@
 import './globals.css';
 import type { ReactNode } from 'react';
+import Script from 'next/script';
+
+const GA_ID = 'G-CPXZSN5G1R';
+const enableAnalytics = process.env.NODE_ENV === 'production';
 
 export const metadata = {
   metadataBase: new URL(process.env.SITE_URL ?? 'http://localhost:3000'),
@@ -23,7 +27,23 @@ export const metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="es">
-      <body className="font-sans antialiased">{children}</body>
+      <body className="font-sans antialiased">
+        {children}
+        {enableAnalytics && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
+              strategy="afterInteractive"
+            />
+            <Script id="ga-init" strategy="afterInteractive">
+              {`window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', '${GA_ID}');`}
+            </Script>
+          </>
+        )}
+      </body>
     </html>
   );
 }
