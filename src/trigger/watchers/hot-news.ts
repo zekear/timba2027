@@ -21,7 +21,8 @@ export async function runHotNewsWatcher(opts: {
   const { relevanceThreshold } = opts;
   const threshold = relevanceThreshold.toFixed(2);
   const candidatesResult = await db.execute(sql`
-    SELECT n.id, n.source, n.headline, n.candidates_mentioned AS candidates_mentioned,
+    SELECT n.id, n.source, n.headline, n.url,
+           n.candidates_mentioned AS candidates_mentioned,
            n.relevance_score::float AS relevance_score
     FROM news n
     LEFT JOIN events e ON e.type = 'HOT_NEWS'
@@ -40,6 +41,7 @@ export async function runHotNewsWatcher(opts: {
     id: number;
     source: string;
     headline: string;
+    url: string;
     candidates_mentioned: string[];
     relevance_score: number;
   }>) {
@@ -82,6 +84,7 @@ export async function runHotNewsWatcher(opts: {
       newsId: row.id,
       source: row.source,
       headline: row.headline,
+      url: row.url,
       candidatesMentioned: candidates,
       relevanceScore: row.relevance_score,
       correlatedMove,

@@ -191,10 +191,16 @@ async function handleHotNews(
 
   const cap_ = await generateCaption({ shape: 'hot_news', data: payload });
 
+  // Apendar link a la nota original. X cuenta cualquier URL como 23 chars (t.co),
+  // así que el costo real es ~24 (newline + URL acortada).
+  const captionWithUrl = payload.url
+    ? `${cap_.caption.trimEnd()}\n\n${payload.url}`
+    : cap_.caption;
+
   const inserted = await db.insert(botPosts).values({
     shape: 'hot_news',
     status: 'draft',
-    caption: cap_.caption,
+    caption: captionWithUrl,
     cardPath: relPath,
     sourceSnapshot: payload,
     llmMetadata: {

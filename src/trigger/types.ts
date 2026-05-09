@@ -26,6 +26,7 @@ export const hotNewsEventSchema = z.object({
   newsId: z.number().int().positive(),
   source: z.string(),
   headline: z.string(),
+  url: z.string().url().optional(),
   candidatesMentioned: z.array(z.string()),
   relevanceScore: z.number(),
   correlatedMove: z.object({
