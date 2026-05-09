@@ -20,10 +20,6 @@ export function Footer() {
           >
             @{handle}
           </a>
-          {' · '}
-          <a href="/admin" className="text-accent underline">
-            admin
-          </a>
         </p>
       </div>
     </footer>
