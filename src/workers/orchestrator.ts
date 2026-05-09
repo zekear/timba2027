@@ -79,7 +79,10 @@ async function main() {
 
   // Watchers cada 5 min — emiten events si hay novedades
   cron.schedule('*/5 * * * *', singleflight('market-move-watcher', () =>
-    runMarketMoveWatcher({ thresholdPct: env.MARKET_MOVE_THRESHOLD_PCT, windowHours: 6 }).then(() => undefined)));
+    runMarketMoveWatcher({
+      thresholdPct: env.MARKET_MOVE_THRESHOLD_PCT,
+      windowHours: env.MARKET_MOVE_WINDOW_HOURS,
+    }).then(() => undefined)));
   cron.schedule('*/5 * * * *', singleflight('new-poll-watcher', () =>
     runNewPollWatcher().then(() => undefined)));
   cron.schedule('*/5 * * * *', singleflight('hot-news-watcher', () =>
