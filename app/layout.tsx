@@ -4,14 +4,14 @@ import type { ReactNode } from 'react';
 export const metadata = {
   metadataBase: new URL(process.env.SITE_URL ?? 'http://localhost:3000'),
   title: {
-    default: 'política — datos automatizados de la elección 2027',
-    template: '%s · política',
+    default: 'Timba 2027 — la timba electoral argentina',
+    template: '%s · Timba 2027',
   },
-  description: 'Bot automatizado que cruza Polymarket + encuestas + noticias para reportar el ciclo electoral argentino.',
+  description: 'Bot automatizado que cruza Polymarket + encuestas locales + noticias mainstream para reportar el mercado electoral argentino 2027. Sin opinión, con fuente.',
   openGraph: {
     type: 'website',
     locale: 'es_AR',
-    siteName: 'política',
+    siteName: 'Timba 2027',
     images: ['/og-default.png'],
   },
   twitter: { card: 'summary_large_image' },
