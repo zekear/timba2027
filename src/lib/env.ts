@@ -23,7 +23,7 @@ const schema = z.object({
   SOFT_LAUNCH_DELAY_SEC: z.coerce.number().int().nonnegative().default(60),
   ADMIN_BASIC_AUTH_USER: z.string().optional(),
   ADMIN_BASIC_AUTH_PASS: z.string().optional(),
-  SITE_URL: z.string().url().default('https://timba2027.ar'),
+  SITE_URL: z.string().url().default('https://timba2027.com'),
   DAILY_PUBLISH_CAP: z.coerce.number().int().positive().default(30),
 });
 

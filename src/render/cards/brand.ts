@@ -7,7 +7,7 @@ import { colors, fonts } from '../tokens.js';
 
 export interface BrandOpts {
   handle: string;     // ej '@Timba2027' (con @, se muestra tal cual)
-  domain: string;     // ej 'timba2027.ar' (sin protocolo)
+  domain: string;     // ej 'timba2027.com' (sin protocolo)
 }
 
 const LOGO_SIZE = 400;       // X profile picture
