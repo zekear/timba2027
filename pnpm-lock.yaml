@@ -4,6 +4,11 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  '@shuding/opentype.js@1.4.0-beta.0':
+    hash: 75979f3457332a3d387401931bd8ee2c9a601d9c14adc89928f193b7f3425ea3
+    path: patches/@shuding__opentype.js@1.4.0-beta.0.patch
+
 importers:
 
   .:
@@ -2898,7 +2903,7 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.60.2':
     optional: true
 
-  '@shuding/opentype.js@1.4.0-beta.0':
+  '@shuding/opentype.js@1.4.0-beta.0(patch_hash=75979f3457332a3d387401931bd8ee2c9a601d9c14adc89928f193b7f3425ea3)':
     dependencies:
       fflate: 0.7.4
       string.prototype.codepointat: 0.2.1
@@ -3767,7 +3772,7 @@ snapshots:
 
   satori@0.26.0:
     dependencies:
-      '@shuding/opentype.js': 1.4.0-beta.0
+      '@shuding/opentype.js': 1.4.0-beta.0(patch_hash=75979f3457332a3d387401931bd8ee2c9a601d9c14adc89928f193b7f3425ea3)
       css-background-parser: 0.1.0
       css-box-shadow: 1.0.0-3
       css-gradient-parser: 0.0.17
