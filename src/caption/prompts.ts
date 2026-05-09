@@ -45,12 +45,13 @@ export function captionPrompt(ctx: CaptionContext): string {
 
   const marketType = detectMarketType(shape, data);
   // Para market_move también extraemos slug/question si están
-  const event = shape === 'market_move' ? (data.event as { marketSlug?: string; marketQuestion?: string; priceNow?: number } | undefined) : undefined;
+  const event = shape === 'market_move' ? (data.event as { marketSlug?: string; marketQuestion?: string; priceNow?: number; siblings?: unknown[] } | undefined) : undefined;
   const marketSlug = event?.marketSlug;
   const isInflationMonthly = marketSlug ? /monthly/i.test(marketSlug) : false;
   const isInflationAnnual = marketSlug ? /inflation/i.test(marketSlug) && !isInflationMonthly : false;
   const isPresidential = marketSlug ? /presidential|president|election/i.test(marketSlug) : false;
   const priceNowPct = event?.priceNow != null ? (event.priceNow * 100).toFixed(1) : null;
+  const siblingsCount = event?.siblings?.length ?? 0;
 
   const marketTypeHint =
     marketType === 'inflation'
@@ -76,11 +77,18 @@ Convertir precio raw a porcentaje: priceNow=0.52 → 52%${priceNowPct ? ` (en es
 Usá formato porcentaje (52%), NO decimal (0.52).`
       : '';
 
+  const siblingsHint =
+    siblingsCount > 0
+      ? `
+
+CO-MOVIMIENTOS: este mercado tiene ${siblingsCount} ${siblingsCount === 1 ? 'otro candidato/rango' : 'candidatos/rangos'} co-moviéndose (campo "siblings"). Mencioná el principal Y el más relevante de los siblings (mayor |deltaPct|) en una frase. Ej: "X subió App y Z bajó Bpp" o "X +App, Y -Bpp en el mismo mercado".`
+      : '';
+
   return `
 Estás escribiendo un tweet para una cuenta automatizada que reporta datos políticos argentinos.
 Tono: factual, conciso, en español rioplatense, sin opinión política, sin partidismo.
 
-Tipo de post: ${shapeHint}.${marketTypeHint}
+Tipo de post: ${shapeHint}.${marketTypeHint}${siblingsHint}
 
 Datos source (los únicos números que podés mencionar):
 ${dataLines}

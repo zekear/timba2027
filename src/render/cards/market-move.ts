@@ -106,19 +106,28 @@ export function marketMoveCard(input: {
           {
             type: 'div',
             props: {
-              style: {
-                fontFamily: fonts.body,
-                fontSize: sizes.bodyLarge,
-                color: colors.pageInk,
-                lineHeight: 1.4,
-              },
-              children: `Probabilidad actual ${(event.priceNow * 100).toFixed(1)}% · cambio en últimas ${event.windowHours}h${
-                context?.latestPollPct != null
-                  ? ` · Encuesta más cercana: ${context.latestPollPct.toFixed(1)}%${
-                      context.latestPollSource ? ` (${context.latestPollSource})` : ''
-                    }`
-                  : ''
-              }`,
+              style: { display: 'flex', flexDirection: 'column', gap: 12 },
+              children: [
+                {
+                  type: 'div',
+                  props: {
+                    style: {
+                      fontFamily: fonts.body,
+                      fontSize: sizes.bodyLarge,
+                      color: colors.pageInk,
+                      lineHeight: 1.4,
+                    },
+                    children: `Probabilidad actual ${(event.priceNow * 100).toFixed(1)}% · cambio en últimas ${event.windowHours}h${
+                      context?.latestPollPct != null
+                        ? ` · Encuesta más cercana: ${context.latestPollPct.toFixed(1)}%${
+                            context.latestPollSource ? ` (${context.latestPollSource})` : ''
+                          }`
+                        : ''
+                    }`,
+                  },
+                },
+                ...(event.siblings.length > 0 ? [siblingsList(event, isElectoral)] : []),
+              ],
             },
           },
         ],
@@ -126,4 +135,56 @@ export function marketMoveCard(input: {
     },
     Footer(timestamp, ribbonSourceLabel, handle),
   ]);
+}
+
+/**
+ * Lista co-moves del mismo mercado. Top 3 por |deltaPct|, formato compacto.
+ */
+function siblingsList(event: MarketMoveEvent, isElectoral: boolean): CardElement {
+  const top = event.siblings.slice(0, 3);
+  return {
+    type: 'div',
+    props: {
+      style: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 4,
+        paddingTop: 12,
+        borderTop: `1px solid ${colors.hairline}`,
+      },
+      children: [
+        {
+          type: 'div',
+          props: {
+            style: {
+              fontFamily: fonts.mono,
+              fontSize: sizes.kicker,
+              color: colors.caption,
+              textTransform: 'uppercase',
+              letterSpacing: '1.0px',
+              marginBottom: 4,
+            },
+            children: 'También se movieron en este mercado',
+          },
+        },
+        ...top.map((s) => {
+          const sign = s.deltaPct >= 0 ? '+' : '';
+          const arrow = s.deltaPct >= 0 ? '▲' : '▼';
+          const subject = isElectoral ? s.candidate : `Rango ${s.candidate}`;
+          return {
+            type: 'div',
+            props: {
+              style: {
+                fontFamily: fonts.body,
+                fontSize: sizes.body,
+                color: colors.pageInk,
+                lineHeight: 1.3,
+              },
+              children: `${subject} ${arrow} ${sign}${s.deltaPct.toFixed(1)}pp · ${(s.priceNow * 100).toFixed(1)}%`,
+            },
+          } satisfies CardElement;
+        }),
+      ],
+    },
+  };
 }
