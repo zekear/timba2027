@@ -76,6 +76,7 @@ export async function uploadMedia(
   const blob = new Blob([buffer], { type: mimeType });
   const form = new FormData();
   form.append('media', blob, 'card.png');
+  form.append('media_category', 'tweet_image');
 
   const res = await fetchWithTimeout(url, {
     timeoutMs: MEDIA_TIMEOUT_MS,
