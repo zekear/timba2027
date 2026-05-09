@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { basename } from 'node:path';
+import { splitCaptionAndUrl } from '../../lib/caption-display.js';
 
 export interface PublicPostProps {
   id: number;
@@ -22,6 +23,7 @@ export function PostCard({ id, shape, caption, cardPath, publishedAt }: PublicPo
   const ts = publishedAt
     ? publishedAt.toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })
     : 's/d';
+  const { text: captionText } = splitCaptionAndUrl(caption);
   return (
     <article className="border-b border-hairline pb-6 mb-6">
       <div className="font-mono text-xs uppercase tracking-wide text-caption mb-2">
@@ -29,8 +31,8 @@ export function PostCard({ id, shape, caption, cardPath, publishedAt }: PublicPo
       </div>
       <Link href={`/posts/${id}` as never} className="block group">
         <img src={cardUrl} alt="" className="w-full border-2 border-ink mb-3 group-hover:opacity-90 transition-opacity" />
-        <p className="font-serif text-xl leading-snug text-pageInk group-hover:text-accent">
-          {caption}
+        <p className="font-serif text-xl leading-snug text-pageInk group-hover:text-accent whitespace-pre-line">
+          {captionText}
         </p>
       </Link>
     </article>

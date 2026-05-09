@@ -7,6 +7,7 @@ import { db } from '../../../src/db/client.js';
 import { botPosts } from '../../../src/db/schema.js';
 import { Header } from '../../components/public/Header.js';
 import { Footer } from '../../components/public/Footer.js';
+import { splitCaptionAndUrl, hostnameOf } from '../../lib/caption-display.js';
 
 export async function generateMetadata({
   params,
@@ -38,26 +39,6 @@ const SHAPE_LABEL: Record<string, string> = {
   hot_news: 'HOT NEWS',
 };
 
-const URL_RE = /(https?:\/\/[^\s)]+)/g;
-
-function renderCaption(text: string) {
-  return text.split(URL_RE).map((part, i) =>
-    /^https?:\/\//.test(part) ? (
-      <a
-        key={i}
-        href={part}
-        target="_blank"
-        rel="noreferrer"
-        className="text-accent underline break-words"
-      >
-        {part}
-      </a>
-    ) : (
-      <span key={i}>{part}</span>
-    ),
-  );
-}
-
 export default async function PublicPost({
   params,
 }: {
@@ -73,6 +54,8 @@ export default async function PublicPost({
 
   const cardFile = basename(p.cardPath);
   const cardUrl = `/api/cards/${encodeURIComponent(cardFile)}`;
+
+  const { text: captionText, url: sourceUrl } = splitCaptionAndUrl(p.caption);
 
   // Source resumen amigable (sin LLM metadata interna)
   const source = p.sourceSnapshot as Record<string, unknown>;
@@ -91,22 +74,32 @@ export default async function PublicPost({
 
         <img src={cardUrl} alt="" className="w-full border-2 border-ink mb-8" />
 
-        <p className="font-serif text-2xl leading-snug text-pageInk mb-8 whitespace-pre-line">
-          {renderCaption(p.caption)}
+        <p className="font-serif text-2xl leading-snug text-pageInk mb-6 whitespace-pre-line">
+          {captionText}
         </p>
 
-        {p.xPostId && (
-          <p className="mb-8">
+        <div className="flex gap-6 mb-8 font-mono text-xs uppercase tracking-wide">
+          {sourceUrl && (
+            <a
+              href={sourceUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="text-accent underline"
+            >
+              fuente → {hostnameOf(sourceUrl)}
+            </a>
+          )}
+          {p.xPostId && (
             <a
               href={`https://x.com/i/status/${p.xPostId}`}
               target="_blank"
               rel="noreferrer"
-              className="font-mono text-xs uppercase tracking-wide text-accent underline"
+              className="text-accent underline"
             >
               ver en X →
             </a>
-          </p>
-        )}
+          )}
+        </div>
 
         <details className="mb-8">
           <summary className="font-mono text-xs uppercase tracking-wide text-caption cursor-pointer">
