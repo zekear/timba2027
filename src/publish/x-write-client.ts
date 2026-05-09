@@ -1,3 +1,4 @@
+import { createHmac, randomBytes } from 'node:crypto';
 import { env } from '../lib/env.js';
 import { fetchWithTimeout } from '../lib/http.js';
 import { logger } from '../lib/logger.js';
@@ -5,14 +6,60 @@ import { logger } from '../lib/logger.js';
 const TWEET_TIMEOUT_MS = 20_000;
 const MEDIA_TIMEOUT_MS = 30_000;
 
-function authHeaders(): Record<string, string> {
-  if (!env.X_API_BEARER_TOKEN) {
-    throw new Error('X_API_BEARER_TOKEN not set; cannot publish');
+function pctEncode(s: string): string {
+  return encodeURIComponent(s).replace(
+    /[!*'()]/g,
+    (c) => '%' + c.charCodeAt(0).toString(16).toUpperCase(),
+  );
+}
+
+function oauthCreds() {
+  const ck = env.X_API_CONSUMER_KEY;
+  const cs = env.X_API_CONSUMER_SECRET;
+  const at = env.X_API_ACCESS_TOKEN;
+  const ats = env.X_API_ACCESS_TOKEN_SECRET;
+  if (!ck || !cs || !at || !ats) {
+    throw new Error(
+      'OAuth 1.0a credentials missing (X_API_CONSUMER_KEY / _SECRET / _ACCESS_TOKEN / _ACCESS_TOKEN_SECRET); cannot publish',
+    );
   }
-  return {
-    authorization: `Bearer ${env.X_API_BEARER_TOKEN}`,
-    accept: 'application/json',
+  return { ck, cs, at, ats };
+}
+
+/**
+ * Construye el header Authorization: OAuth ... para una request firmada con OAuth 1.0a HMAC-SHA1.
+ * Para multipart (uploadMedia) los params del body NO entran en la base string — solo los oauth_*.
+ * Para application/json (createTweet) tampoco — solo oauth_*.
+ * (form-encoded es el único caso donde sí entrarían, y no lo usamos.)
+ */
+function oauthHeader(method: 'POST' | 'GET', url: string): string {
+  const { ck, cs, at, ats } = oauthCreds();
+  const params: Record<string, string> = {
+    oauth_consumer_key: ck,
+    oauth_nonce: randomBytes(16).toString('hex'),
+    oauth_signature_method: 'HMAC-SHA1',
+    oauth_timestamp: Math.floor(Date.now() / 1000).toString(),
+    oauth_token: at,
+    oauth_version: '1.0',
   };
+
+  const paramString = Object.keys(params)
+    .sort()
+    .map((k) => `${pctEncode(k)}=${pctEncode(params[k]!)}`)
+    .join('&');
+
+  const baseString = [method, pctEncode(url), pctEncode(paramString)].join('&');
+  const signingKey = `${pctEncode(cs)}&${pctEncode(ats)}`;
+  const signature = createHmac('sha1', signingKey).update(baseString).digest('base64');
+
+  const headerParams = { ...params, oauth_signature: signature };
+  return (
+    'OAuth ' +
+    Object.keys(headerParams)
+      .sort()
+      .map((k) => `${pctEncode(k)}="${pctEncode(headerParams[k as keyof typeof headerParams]!)}"`)
+      .join(', ')
+  );
 }
 
 /**
@@ -33,7 +80,10 @@ export async function uploadMedia(
   const res = await fetchWithTimeout(url, {
     timeoutMs: MEDIA_TIMEOUT_MS,
     method: 'POST',
-    headers: authHeaders(),
+    headers: {
+      authorization: oauthHeader('POST', url),
+      accept: 'application/json',
+    },
     body: form,
   });
 
@@ -66,7 +116,11 @@ export async function createTweet(opts: {
   const res = await fetchWithTimeout(url, {
     timeoutMs: TWEET_TIMEOUT_MS,
     method: 'POST',
-    headers: { ...authHeaders(), 'content-type': 'application/json' },
+    headers: {
+      authorization: oauthHeader('POST', url),
+      accept: 'application/json',
+      'content-type': 'application/json',
+    },
     body: JSON.stringify(body),
   });
   if (!res.ok) {
