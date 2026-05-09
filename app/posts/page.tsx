@@ -83,7 +83,7 @@ export default async function PostsIndex({
                 className={
                   'px-3 py-1 border-2 ' +
                   (active
-                    ? 'border-ink bg-ink text-paperWhite'
+                    ? 'border-ink bg-ink text-paper'
                     : 'border-hairline text-caption hover:border-ink hover:text-pageInk')
                 }
               >
