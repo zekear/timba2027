@@ -13,6 +13,7 @@ export interface BrandOpts {
 const LOGO_SIZE = 400;       // X profile picture
 const BANNER_W = 1500;       // X header banner
 const BANNER_H = 500;
+const FAVICON_SIZE = 256;    // Next escala según necesite
 
 /**
  * Logo cuadrado 400×400. Diseño minimal:
@@ -199,7 +200,44 @@ export function bannerCard(opts: BrandOpts): CardElement {
   };
 }
 
+/**
+ * Favicon 256×256. Versión optimizada para tamaños chicos:
+ *   - Sin "2027" mono (ilegible a 16×16/32×32)
+ *   - "T" más grande respecto al canvas (menos margen)
+ *   - Sin borde (Next escala — el borde fino se vuelve halo)
+ */
+export function faviconCard(): CardElement {
+  return {
+    type: 'div',
+    props: {
+      style: {
+        display: 'flex',
+        width: FAVICON_SIZE,
+        height: FAVICON_SIZE,
+        background: colors.paperWhite,
+        alignItems: 'center',
+        justifyContent: 'center',
+      },
+      children: [
+        {
+          type: 'div',
+          props: {
+            style: {
+              fontFamily: fonts.display,
+              fontSize: 220,
+              lineHeight: 0.85,
+              color: colors.ink,
+            },
+            children: 'T',
+          },
+        },
+      ],
+    },
+  };
+}
+
 export const brandSizes = {
   logo: { width: LOGO_SIZE, height: LOGO_SIZE },
   banner: { width: BANNER_W, height: BANNER_H },
+  favicon: { width: FAVICON_SIZE, height: FAVICON_SIZE },
 };

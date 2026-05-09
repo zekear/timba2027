@@ -1,13 +1,14 @@
 /**
- * Genera logo (400×400) + banner (1500×500) para la cuenta de X.
+ * Genera logo (400×400) + banner (1500×500) + favicon (256×256).
  * Run: pnpm tsx scripts/render-brand.ts
  *
  * Outputs:
  *   storage/cards/brand-logo.png
  *   storage/cards/brand-banner.png
+ *   storage/cards/brand-favicon.png
  */
 import { renderToPng } from '../src/render/compose.js';
-import { logoCard, bannerCard, brandSizes } from '../src/render/cards/brand.js';
+import { logoCard, bannerCard, faviconCard, brandSizes } from '../src/render/cards/brand.js';
 import { env } from '../src/lib/env.js';
 
 const handle = env.BOT_HANDLE;
@@ -26,5 +27,12 @@ const { absPath: bannerAbs } = await renderToPng(
   brandSizes.banner,
 );
 console.log('Banner: ', bannerAbs);
+
+const { absPath: faviconAbs } = await renderToPng(
+  faviconCard(),
+  'brand-favicon',
+  brandSizes.favicon,
+);
+console.log('Favicon:', faviconAbs);
 
 process.exit(0);
