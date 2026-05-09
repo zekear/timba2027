@@ -62,10 +62,15 @@ El campo "candidate" es un RANGO de inflación (ej: "30-34.9%", "≤2.1%"), NO u
 El precio (priceNow) es la PROBABILIDAD que el mercado le asigna a que la inflación ${isInflationMonthly ? 'mensual de abril' : isInflationAnnual ? 'anual 2026' : ''} caiga en ese rango.
 Convertir precio raw a porcentaje: priceNow=0.191 → 19.1%${priceNowPct ? ` (en este caso: ${priceNowPct}%)` : ''}.
 
-Vocabulario CORRECTO: "rango", "tramo", "probabilidad", "el mercado le asigna X%".
-Vocabulario PROHIBIDO: "candidato", "apuestas para [rango]", "votos", "ganar".
-Ejemplo bueno: "🔔 Polymarket — Inflación anual 2026: la probabilidad del rango 30-34.9% subió de 29% a 33% en 6h."
-Ejemplo MALO: "Apuestas para candidato 30-34.9%" / "subió a 0.33" (usa formato decimal, no porcentaje).`
+CRÍTICO: hay DOS "%" distintos en juego. El que aparece en el "candidate" (ej "2.5-2.7%") es el RANGO DE INFLACIÓN. El priceNow*100 es la PROBABILIDAD que el mercado asigna. NUNCA los mezcles. SIEMPRE usá la palabra "probabilidad" (o abreviada "prob.") al referirte al precio, y la palabra "rango" al referirte al candidate. NUNCA digas "2.5-2.7% cayó a 40%" — confunde al lector.
+
+Ejemplos BUENOS:
+- "🔔 Polymarket — Inflación anual 2026: la probabilidad del rango 30-34.9% subió de 29% a 33% en 6h."
+- "🔔 Polymarket movió la probabilidad de inflación abril: el rango 2.5-2.7% cae al 40% (-18pp); el rango 3.4-3.6% sube al 3.6% (+3pp)."
+Ejemplos MALOS:
+- "2.5-2.7% cayó a 40%" — confuso, no sabés si 40% es inflación o probabilidad.
+- "Apuestas para candidato 30-34.9%" — no son candidatos.
+- "subió a 0.33" — usá porcentaje, no decimal.`
       : marketType === 'electoral'
       ? `
 
@@ -81,7 +86,7 @@ Usá formato porcentaje (52%), NO decimal (0.52).`
     siblingsCount > 0
       ? `
 
-CO-MOVIMIENTOS: este mercado tiene ${siblingsCount} ${siblingsCount === 1 ? 'otro candidato/rango' : 'candidatos/rangos'} co-moviéndose (campo "siblings"). Mencioná el principal Y el más relevante de los siblings (mayor |deltaPct|) en una frase. Ej: "X subió App y Z bajó Bpp" o "X +App, Y -Bpp en el mismo mercado".`
+CO-MOVIMIENTOS: este mercado tiene ${siblingsCount} ${siblingsCount === 1 ? 'otro rango/candidato' : 'rangos/candidatos'} co-moviéndose (campo "siblings"). Tu tweet DEBE mencionar tanto el principal como el sibling más relevante. Estructura recomendada (inflación): "[market header]: la probabilidad del rango [primary] [sube/cae] al [primary priceNow]% ([primary delta]pp); el rango [sibling] [opuesto] al [sibling priceNow]% ([sibling delta]pp)."`
       : '';
 
   return `
