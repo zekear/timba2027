@@ -38,6 +38,26 @@ const SHAPE_LABEL: Record<string, string> = {
   hot_news: 'HOT NEWS',
 };
 
+const URL_RE = /(https?:\/\/[^\s)]+)/g;
+
+function renderCaption(text: string) {
+  return text.split(URL_RE).map((part, i) =>
+    /^https?:\/\//.test(part) ? (
+      <a
+        key={i}
+        href={part}
+        target="_blank"
+        rel="noreferrer"
+        className="text-accent underline break-words"
+      >
+        {part}
+      </a>
+    ) : (
+      <span key={i}>{part}</span>
+    ),
+  );
+}
+
 export default async function PublicPost({
   params,
 }: {
@@ -71,7 +91,9 @@ export default async function PublicPost({
 
         <img src={cardUrl} alt="" className="w-full border-2 border-ink mb-8" />
 
-        <p className="font-serif text-2xl leading-snug text-pageInk mb-8">{p.caption}</p>
+        <p className="font-serif text-2xl leading-snug text-pageInk mb-8 whitespace-pre-line">
+          {renderCaption(p.caption)}
+        </p>
 
         {p.xPostId && (
           <p className="mb-8">
