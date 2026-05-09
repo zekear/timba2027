@@ -22,7 +22,10 @@ const schema = z.object({
   X_API_ACCESS_TOKEN: z.string().optional(),
   X_API_ACCESS_TOKEN_SECRET: z.string().optional(),
   PUBLISH_MODE: z.enum(['shadow', 'soft', 'full']).default('shadow'),
-  KILL_SWITCH: z.coerce.boolean().default(false),
+  KILL_SWITCH: z
+    .string()
+    .default('false')
+    .transform((v) => v === 'true' || v === '1'),
   BOT_HANDLE: z.string().default('@Timba2027'),
   SOFT_LAUNCH_DELAY_SEC: z.coerce.number().int().nonnegative().default(60),
   ADMIN_BASIC_AUTH_USER: z.string().optional(),
