@@ -68,20 +68,47 @@ export async function runPublisher(): Promise<PublisherStats> {
   }
 
   const scheduled = await db.execute(sql`
-    SELECT id, caption, card_path FROM bot_posts
+    SELECT id, caption, card_path, thread FROM bot_posts
     WHERE status = 'scheduled'
     ORDER BY generated_at ASC
     LIMIT ${MAX_PER_RUN}
   `);
   stats.scheduled = scheduled.rows.length;
 
-  for (const row of scheduled.rows as Array<{ id: number; caption: string; card_path: string }>) {
+  type ThreadEntry = { caption: string; cardPath?: string };
+  for (const row of scheduled.rows as Array<{
+    id: number;
+    caption: string;
+    card_path: string;
+    thread: ThreadEntry[] | null;
+  }>) {
     try {
+      // Tweet principal con su card
       const cardBuf = await readFile(resolve(process.cwd(), row.card_path));
       const mediaId = await uploadMedia(cardBuf, 'image/png');
-      const tweetId = await createTweet({ text: row.caption, mediaIds: [mediaId] });
-      await markPublished(row.id, tweetId);
+      const headTweetId = await createTweet({ text: row.caption, mediaIds: [mediaId] });
+
+      // Replies del thread (si hay) — chain de in_reply_to_tweet_id
+      let prevId = headTweetId;
+      const thread = Array.isArray(row.thread) ? row.thread : [];
+      for (const entry of thread) {
+        const mediaIds: string[] = [];
+        if (entry.cardPath) {
+          const buf = await readFile(resolve(process.cwd(), entry.cardPath));
+          mediaIds.push(await uploadMedia(buf, 'image/png'));
+        }
+        prevId = await createTweet({
+          text: entry.caption,
+          mediaIds,
+          replyToTweetId: prevId,
+        });
+      }
+
+      await markPublished(row.id, headTweetId);
       stats.published++;
+      if (thread.length > 0) {
+        logger.info({ postId: row.id, threadLength: thread.length, headTweetId }, 'publisher: thread posted');
+      }
     } catch (err) {
       stats.failed++;
       logger.error(

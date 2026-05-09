@@ -171,6 +171,7 @@ export const botPostShapeEnum = pgEnum('bot_post_shape', [
   'market_move',
   'new_poll',
   'hot_news',
+  'weekly_recap',
 ]);
 
 export const botPostStatusEnum = pgEnum('bot_post_status', [
@@ -197,6 +198,9 @@ export const botPosts = pgTable(
     publishedAt: timestamp('published_at', { withTimezone: true }),
     xPostId: text('x_post_id'),
     metrics: jsonb('metrics'),
+    // Para shape='weekly_recap' u otros threads: array de replies después del tweet principal.
+    // null o [] = single tweet (comportamiento existente). Cada entry: { caption, cardPath?, xPostId? }.
+    thread: jsonb('thread'),
   },
   (t) => ({
     statusIdx: index('bot_posts_status_idx').on(t.status, t.generatedAt),

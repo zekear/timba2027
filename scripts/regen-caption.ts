@@ -50,6 +50,11 @@ async function main() {
   console.log(post.caption);
   console.log('---');
 
+  if (post.shape === 'weekly_recap') {
+    console.error('regen-caption no soporta weekly_recap (es un thread). Re-correr el cron weekly o el script run-weekly-recap.ts y descartar el draft viejo.');
+    process.exit(1);
+  }
+
   const data = post.sourceSnapshot as Record<string, unknown>;
   const cap = await generateCaption({ shape: post.shape, data });
 

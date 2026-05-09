@@ -13,6 +13,7 @@ import { runNewPollWatcher } from '../trigger/watchers/new-poll.js';
 import { runHotNewsWatcher } from '../trigger/watchers/hot-news.js';
 import { runTriggerOrchestrator } from '../trigger/orchestrator.js';
 import { runMorningBrief } from '../trigger/morning-brief.js';
+import { runWeeklyRecap } from '../trigger/weekly-recap.js';
 import { runPublisher } from '../publish/publisher.js';
 import { schedulePost } from '../publish/transitions.js';
 
@@ -95,6 +96,13 @@ async function main() {
   // Morning brief diario a las 9am ARG (12:00 UTC)
   cron.schedule('0 12 * * *', singleflight('morning-brief', () =>
     runMorningBrief().then(() => undefined)));
+
+  // Weekly recap thread: domingo 21:00 ART
+  cron.schedule(
+    '0 21 * * 0',
+    singleflight('weekly-recap', () => runWeeklyRecap().then(() => undefined)),
+    { timezone: 'America/Argentina/Buenos_Aires' },
+  );
 
   // Soft-launch delay: approved → scheduled tras SOFT_LAUNCH_DELAY_SEC.
   // Cron cada 30s. Cap implícito por LIMIT 10.

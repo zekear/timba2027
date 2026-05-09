@@ -103,16 +103,21 @@ export async function uploadMedia(
 
 /**
  * Crea un tweet con texto + media opcional. Devuelve el tweet id.
+ * Si se pasa replyToTweetId, el tweet se postea como reply (threading).
  * POST /2/tweets — costo: 1 write ($0.015 desde abril 2026).
  */
 export async function createTweet(opts: {
   text: string;
   mediaIds: string[];
+  replyToTweetId?: string;
 }): Promise<string> {
   const url = `${env.X_API_BASE}/tweets`;
   const body: Record<string, unknown> = { text: opts.text };
   if (opts.mediaIds.length > 0) {
     body.media = { media_ids: opts.mediaIds };
+  }
+  if (opts.replyToTweetId) {
+    body.reply = { in_reply_to_tweet_id: opts.replyToTweetId };
   }
   const res = await fetchWithTimeout(url, {
     timeoutMs: TWEET_TIMEOUT_MS,
