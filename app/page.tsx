@@ -12,6 +12,8 @@ export const dynamic = 'force-dynamic';
 interface CandidateRow {
   candidate: string;
   pct: number;
+  delta7d: number | null;
+  sparkline: number[];
 }
 
 async function getCurrentTop5(): Promise<CandidateRow[]> {
@@ -22,7 +24,35 @@ async function getCurrentTop5(): Promise<CandidateRow[]> {
     ORDER BY candidate, ts DESC
   `);
   const rows = r.rows as Array<{ candidate: string; pct: number }>;
-  return rows.sort((a, b) => b.pct - a.pct).slice(0, 5);
+  const top5 = rows.sort((a, b) => b.pct - a.pct).slice(0, 5);
+  if (top5.length === 0) return [];
+
+  // Histórico 7d: 1 muestra por hora, por candidato del top 5
+  const candidates = top5.map((c) => c.candidate);
+  const history = await db.execute(sql`
+    SELECT candidate,
+           date_trunc('hour', ts) AS hour,
+           AVG(price::float * 100) AS pct
+    FROM market_prices mp JOIN markets m ON m.id = mp.market_id
+    WHERE m.slug = 'argentina-presidential-election-winner'
+      AND candidate = ANY(${candidates})
+      AND ts > NOW() - INTERVAL '7 days'
+    GROUP BY candidate, hour
+    ORDER BY candidate, hour
+  `);
+
+  const byCandidate = new Map<string, number[]>();
+  for (const row of history.rows as Array<{ candidate: string; hour: Date; pct: number }>) {
+    const arr = byCandidate.get(row.candidate) ?? [];
+    arr.push(row.pct);
+    byCandidate.set(row.candidate, arr);
+  }
+
+  return top5.map((c) => {
+    const series = byCandidate.get(c.candidate) ?? [];
+    const delta7d = series.length >= 2 ? c.pct - series[0] : null;
+    return { ...c, delta7d, sparkline: series };
+  });
 }
 
 export default async function Home() {
@@ -62,7 +92,14 @@ export default async function Home() {
             </div>
             <div className="space-y-1">
               {top5.map((c) => (
-                <BarRow key={c.candidate} candidato={c.candidate} pct={c.pct} maxPct={maxPct} />
+                <BarRow
+                  key={c.candidate}
+                  candidato={c.candidate}
+                  pct={c.pct}
+                  maxPct={maxPct}
+                  delta7d={c.delta7d ?? undefined}
+                  sparkline={c.sparkline}
+                />
               ))}
             </div>
           </section>
