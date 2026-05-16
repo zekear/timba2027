@@ -27,15 +27,18 @@ async function getCurrentTop5(): Promise<CandidateRow[]> {
   const top5 = rows.sort((a, b) => b.pct - a.pct).slice(0, 5);
   if (top5.length === 0) return [];
 
-  // Histórico 7d: 1 muestra por hora, por candidato del top 5
+  // Histórico 7d: 1 muestra por hora, por candidato del top 5.
+  // Pasamos el array como literal PG ('{a,b,c}') porque drizzle expande
+  // JS arrays como tuple ($1,$2,...) en vez de array param.
   const candidates = top5.map((c) => c.candidate);
+  const candidatesArrayLiteral = `{${candidates.map((c) => `"${c.replace(/"/g, '\\"')}"`).join(',')}}`;
   const history = await db.execute(sql`
     SELECT candidate,
            date_trunc('hour', ts) AS hour,
            AVG(price::float * 100) AS pct
     FROM market_prices mp JOIN markets m ON m.id = mp.market_id
     WHERE m.slug = 'argentina-presidential-election-winner'
-      AND candidate = ANY(${candidates})
+      AND candidate = ANY(${candidatesArrayLiteral}::text[])
       AND ts > NOW() - INTERVAL '7 days'
     GROUP BY candidate, hour
     ORDER BY candidate, hour
