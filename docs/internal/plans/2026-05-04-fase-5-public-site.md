@@ -1931,8 +1931,8 @@ COMMIT
 
 - [ ] **Notas para Fase Ops (deploy a VPS, separada)**
   - Persistir patch de `@shuding/opentype.js` con `pnpm patch`
-  - Configurar nginx en VPS con TLS para `politica.tryclawdia.com`
-  - `SITE_URL=https://politica.tryclawdia.com` en `.env.production`
+  - Configurar nginx en VPS con TLS para `timba2027.com`
+  - `SITE_URL=https://timba2027.com` en `.env.production`
   - Backups diarios de Postgres a Backblaze B2
   - Auth admin de basic-auth → algo más serio (NextAuth con magic link?) antes de exponer público
   - Reservar handle del bot en X y ajustar `BOT_HANDLE` en env

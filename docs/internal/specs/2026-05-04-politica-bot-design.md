@@ -14,7 +14,7 @@ Bot automatizado de X (Twitter) que postea cards visuales sobre política argent
 
 Foco principal: **elecciones generales 2027** (24/10/2027). Foco secundario: **legislativas 2026** + **provinciales** para alimentar el sistema con material mientras 2027 se acerca.
 
-Acompañado por un sitio web minimalista en `politica.tryclawdia.com` que sirve de archivo navegable y review queue para los posts del bot.
+Acompañado por un sitio web minimalista en `timba2027.com` que sirve de archivo navegable y review queue para los posts del bot.
 
 **No hay monetización en V1.** El objetivo de V1 es viralidad en X. La capa de monetización (suscripción, API B2B) se evalúa después de tener tracción medible.
 
@@ -240,16 +240,16 @@ Permite trazabilidad total si después aparece un error.
 
 | Capa | Elección | Razón |
 |---|---|---|
-| Lenguaje | TypeScript | Background Ualá / Node ecosystem maduro |
+| Lenguaje | TypeScript | Stack del autor + ecosistema Node maduro |
 | Web | Next.js (App Router) | Sitio + API routes en un solo proceso |
-| DB | Postgres 16 | Time-series + relacional + jsonb. Container propio (no se reutiliza el Supabase de adopta.mx) |
+| DB | Postgres 16 | Time-series + relacional + jsonb. Container propio. |
 | Workers | Node + node-cron (V1) | Simple. Inngest evaluable después si necesitamos durable workflows |
 | LLM | Claude (Haiku para classify/tag, Sonnet para vision) | Calidad de vision + structured output + prompt caching |
 | Card gen | Satori | React → PNG, lib estable de Vercel |
 | X API | pay-per-use (USD 0.005/read, USD 0.015/write desde abril 2026) | Reemplazó tiers fijos en feb 2026 |
 | Hosting V1 | Local (dev) | Docker compose en Mac |
-| Hosting V2 | DigitalOcean droplet `137.184.218.9` | Mismo VPS que adopta.mx |
-| TLS / proxy | nginx + Let's Encrypt en VPS | Mismo pattern que `*.tryclawdia.com` |
+| Hosting V2 | DigitalOcean droplet (IP en `.env`, no commiteado) | VPS dedicado |
+| TLS / proxy | nginx + Let's Encrypt en VPS | Single-domain cert |
 
 ### LLM transport — abstracción desde día 1
 
@@ -333,7 +333,7 @@ Stack 100% en Docker en `/home/webadmin/politica/`:
 - `postgres` (volumen persistente, no expuesto fuera del compose)
 - `app` (Next.js, expuesto al nginx host)
 - `worker` (Node con SDK, sin puertos)
-- `nginx` host (no en el compose) sirve `politica.tryclawdia.com` con TLS
+- `nginx` host (no en el compose) sirve `timba2027.com` con TLS
 
 Deploy:
 
@@ -357,7 +357,7 @@ Backups: dump diario de Postgres a Backblaze B2 (o S3 compatible) con retención
 |---|---|
 | X API (pay-per-use) | 30-50 |
 | Claude API (con prompt caching) | 10-30 |
-| DigitalOcean droplet (compartido con adopta.mx) | 0 incremental |
+| DigitalOcean droplet (compartido con otros proyectos del autor) | 0 incremental |
 | Storage (cards en VPS / B2 backups) | 1-5 |
 | Dominio | ~1 (subdominio existente) |
 | **Total** | **~50-100/mes** |
