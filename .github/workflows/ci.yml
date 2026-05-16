@@ -61,6 +61,6 @@ jobs:
         run: pnpm typecheck
 
       - name: Test
-        # Excluyo tests/llm/cli.test.ts: spawnea el binario `claude` real,
-        # no viable en CI público. Se corre localmente.
-        run: pnpm test -- --exclude tests/llm/cli.test.ts
+        # vitest.config.ts excluye tests/llm/cli.test.ts cuando CI=true
+        # (binario `claude` no instalable en runners públicos).
+        run: pnpm test
