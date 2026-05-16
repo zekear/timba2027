@@ -4,9 +4,6 @@
  * la caption (LLM) y la imagen (render con tokens/layout actuales).
  *
  * Run: pnpm tsx scripts/regen-caption.ts <postId>
- * Run en VPS:
- *   ssh timba2027 "cd /home/timba/timba && set -a && . ./.env && set +a && \
- *     node_modules/.bin/tsx scripts/regen-caption.ts 17"
  */
 import { eq } from 'drizzle-orm';
 import { db } from '../src/db/client.js';

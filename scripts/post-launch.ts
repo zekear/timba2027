@@ -1,9 +1,7 @@
 /**
  * Tweet de lanzamiento de @Timba2027.
  *
- * Run en VPS:
- *   ssh timba2027 "cd /home/timba/timba && set -a && . ./.env && set +a && \
- *     node_modules/.bin/tsx scripts/post-launch.ts"
+ * Run: pnpm tsx scripts/post-launch.ts
  *
  * El pin to profile es manual (X v2 free no expone /pinned_tweets) — se hace
  * desde la web una vez posteado.

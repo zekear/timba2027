@@ -3,7 +3,6 @@
  *
  * Run (texto solo):       pnpm tsx scripts/test-x-publish.ts
  * Run (con imagen brand): pnpm tsx scripts/test-x-publish.ts --with-image
- * Run (en server):        ssh timba2027 "cd /home/timba/timba && set -a && . ./.env && set +a && node_modules/.bin/tsx scripts/test-x-publish.ts"
  *
  * IMPORTANTE: postea de verdad. Si no querés un tweet de prueba en producción
  * borrá el tweet manual desde la cuenta una vez confirmado.
