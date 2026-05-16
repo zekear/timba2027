@@ -1,0 +1,59 @@
+name: ✨ Feature request
+description: Proponer una idea
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Antes de proponer un feature grande, mirá el roadmap del README. Si lo que querés ya está ahí, votalo con un 👍.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problema que resuelve
+      description: ¿Qué dolor estás tratando de calmar? Sin esto es difícil priorizar.
+      placeholder: Hoy no se puede X porque...
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Propuesta
+      description: Cómo lo resolverías
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternativas consideradas
+      description: ¿Hay otras formas? ¿Por qué la propuesta es mejor?
+    validations:
+      required: false
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope
+      multiple: true
+      options:
+        - worker / ingesta
+        - trigger engine
+        - LLM / prompts
+        - render / cards
+        - publish / X
+        - sitio público
+        - admin
+        - docs
+        - otro
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: ¿Te animás a implementarlo?
+      options:
+        - label: Sí, puedo mandar un PR
+        - label: Puedo ayudar con QA / review

@@ -1,0 +1,66 @@
+name: 🐛 Bug report
+description: Reportar un bug
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Gracias por reportar. Cuanto más específico, más rápido se arregla.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: Qué pasó
+      description: Descripción del bug
+      placeholder: Cuando hago X, pasa Y. Esperaba Z.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Cómo reproducirlo
+      description: Pasos para reproducir el problema
+      placeholder: |
+        1. Arrancar worker con `pnpm worker`
+        2. ...
+        3. Ver error en logs
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Comportamiento esperado
+    validations:
+      required: false
+
+  - type: input
+    id: version
+    attributes:
+      label: Commit / versión
+      description: Output de `git rev-parse --short HEAD`
+      placeholder: e.g. 9b02fce
+    validations:
+      required: false
+
+  - type: textarea
+    id: env
+    attributes:
+      label: Entorno
+      description: Node version, OS, modo de publicación, etc.
+      placeholder: |
+        - Node: 20.x
+        - OS: Ubuntu 24.04
+        - PUBLISH_MODE: shadow
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs relevantes
+      description: Pegá los logs (no incluyas credenciales)
+      render: shell
+    validations:
+      required: false

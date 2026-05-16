@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: timba-pg
+    environment:
+      POSTGRES_USER: timba
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: timba
+    ports:
+      - "127.0.0.1:5432:5432"  # solo localhost (no internet)
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U timba"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pg_data:

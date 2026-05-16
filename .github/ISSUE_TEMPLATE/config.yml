@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🔒 Reportar vulnerabilidad de seguridad
+    url: https://github.com/ezeqmina/ar-elections-2027/security/policy
+    about: Para issues de seguridad, mandá un mail directo según SECURITY.md (no abras un issue público).
+  - name: 💬 Preguntas generales
+    url: https://github.com/ezeqmina/ar-elections-2027/discussions
+    about: Usá Discussions para preguntas, ideas o feedback general.
