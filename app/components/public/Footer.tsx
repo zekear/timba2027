@@ -20,6 +20,15 @@ export function Footer() {
           >
             @{handle}
           </a>
+          {' · '}
+          <a
+            href="https://github.com/zekear/timba2027"
+            target="_blank"
+            rel="noreferrer"
+            className="text-accent underline"
+          >
+            código en github
+          </a>
         </p>
       </div>
     </footer>
