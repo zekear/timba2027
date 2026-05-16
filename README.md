@@ -8,7 +8,7 @@
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](./CONTRIBUTING.md)
 
 <p align="center">
-  <img src="public/og-default.png" alt="Timba — política argentina, en datos" width="640" />
+  <img src="public/brand-banner.png" alt="Timba — política argentina, en datos" width="900" />
 </p>
 
 🤖 **En vivo:** [@Timba2027](https://x.com/Timba2027) — 🌐 **Sitio:** [timba2027.com](https://timba2027.com)
