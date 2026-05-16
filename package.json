@@ -22,7 +22,7 @@
   "dependencies": {
     "@resvg/resvg-js": "^2.6.2",
     "dotenv": "^16.4.5",
-    "drizzle-orm": "^0.36.0",
+    "drizzle-orm": "^0.45.2",
     "next": "^15.5.18",
     "node-cron": "^3.0.3",
     "pg": "^8.13.0",
