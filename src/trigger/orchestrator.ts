@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { db } from '../db/client.js';
 import { botPosts, polls, pollsters } from '../db/schema.js';
 import { logger } from '../lib/logger.js';
@@ -85,10 +85,26 @@ async function handleMarketMove(
   const cap = await canPostNow({ now: new Date(), candidateFocus: payload.candidate, bypassQuietHours: true, bypassDailyCap: true });
   if (!cap.ok) return { ok: false, reason: cap.reason ?? 'cap_unknown' };
 
+  const isInflation = payload.marketSlug ? /inflation/i.test(payload.marketSlug) : false;
+
+  // Para inflación: sparkline del consenso (no del bucket que se movió) +
+  // snapshot de todos los buckets del mercado para el layout especializado.
+  let priceHistory: number[];
+  let allBuckets: Array<{ label: string; pctNow: number; deltaPct?: number }> | undefined;
+  if (isInflation) {
+    allBuckets = await fetchAllBuckets(payload.marketId);
+    const consenso = allBuckets[0]?.label;
+    priceHistory = consenso ? await fetchPriceHistory(payload.marketId, consenso) : [];
+  } else {
+    priceHistory = await fetchPriceHistory(payload.marketId, payload.candidate);
+  }
+
   const card = marketMoveCard({
     event: payload,
     timestamp: nowStr(),
     handle: HANDLE,
+    priceHistory,
+    allBuckets,
   });
 
   const filename = `event-${eventId}-market-move`;
@@ -214,4 +230,45 @@ async function handleHotNews(
   }).returning({ id: botPosts.id });
 
   return { ok: true, postId: inserted[0].id };
+}
+
+async function fetchPriceHistory(marketId: string, candidate: string): Promise<number[]> {
+  const result = await db.execute(sql`
+    SELECT date_trunc('hour', ts) AS hour, AVG(price::float) AS price
+    FROM market_prices
+    WHERE market_id = ${marketId}
+      AND candidate = ${candidate}
+      AND ts > NOW() - INTERVAL '7 days'
+    GROUP BY hour
+    ORDER BY hour
+  `);
+  return (result.rows as Array<{ price: number }>).map((r) => r.price);
+}
+
+async function fetchAllBuckets(
+  marketId: string,
+): Promise<Array<{ label: string; pctNow: number; deltaPct?: number }>> {
+  const result = await db.execute(sql`
+    WITH latest AS (
+      SELECT DISTINCT ON (candidate) candidate, (price::float * 100) AS pct_now
+      FROM market_prices
+      WHERE market_id = ${marketId}
+      ORDER BY candidate, ts DESC
+    ),
+    earlier AS (
+      SELECT DISTINCT ON (candidate) candidate, (price::float * 100) AS pct_then
+      FROM market_prices
+      WHERE market_id = ${marketId}
+        AND ts <= NOW() - INTERVAL '24 hours'
+      ORDER BY candidate, ts DESC
+    )
+    SELECT l.candidate AS label, l.pct_now, (l.pct_now - COALESCE(e.pct_then, l.pct_now)) AS delta_pct
+    FROM latest l LEFT JOIN earlier e USING (candidate)
+    ORDER BY l.pct_now DESC
+  `);
+  return (result.rows as Array<{ label: string; pct_now: number; delta_pct: number }>).map((r) => ({
+    label: r.label,
+    pctNow: r.pct_now,
+    deltaPct: r.delta_pct ?? undefined,
+  }));
 }
