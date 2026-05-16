@@ -1,0 +1,1 @@
+ALTER TYPE "public"."bot_post_shape" ADD VALUE 'duelo_crossover';
