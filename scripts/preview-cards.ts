@@ -2,12 +2,13 @@
  * Genera 3 cards preview para validar el nuevo diseño post-fix de marketSlug.
  * Run: pnpm tsx scripts/preview-cards.ts
  */
+import { env } from '../src/lib/env.js';
 import { renderToPng } from '../src/render/compose.js';
 import { marketMoveCard } from '../src/render/cards/market-move.js';
 import { hotNewsCard } from '../src/render/cards/hot-news.js';
 
 const ts = '14:32 GMT-3';
-const handle = '@ezeqmina';
+const handle = env.BOT_HANDLE;
 
 // Caso 1: inflación anual subiendo
 await renderToPng(

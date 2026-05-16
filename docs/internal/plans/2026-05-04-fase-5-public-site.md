@@ -390,7 +390,7 @@ export function Footer() {
           Sin afiliación política. Cada post tiene fuente verificable. No es asesoramiento ni predicción.
         </p>
         <p>
-          <a href="https://github.com/ezeqmina/ar-elections-2027" className="text-accent underline">code</a>
+          <a href="https://github.com/zekear/timba2027" className="text-accent underline">code</a>
           {' · '}
           <a href="/admin" className="text-accent underline">admin</a>
         </p>

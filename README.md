@@ -74,8 +74,8 @@ El sitio público (Next) sirve **archivo navegable** + páginas por candidato/en
 Requisitos: **Node 20+**, **pnpm**, **Docker**, [Claude CLI](https://docs.anthropic.com/claude-code) autenticado, **X API bearer token** (opcional para arrancar).
 
 ```bash
-git clone https://github.com/ezeqmina/ar-elections-2027.git
-cd ar-elections-2027
+git clone https://github.com/zekear/timba2027.git
+cd timba2027
 cp .env.example .env
 # Editar .env (DATABASE_URL ya tiene un default usable + X_API_* si vas a publicar)
 
@@ -163,6 +163,6 @@ Security: ver [`SECURITY.md`](./SECURITY.md).
 
 ## Créditos
 
-Construido por **[Ezequiel Mina](https://github.com/ezeqmina)**.
+Construido por **[Ezequiel Mina](https://github.com/zekear)**.
 
 Diseño visual inspirado en WIRED (ver [`DESIGN.md`](./DESIGN.md)). Datos de [Polymarket](https://polymarket.com/), encuestadoras públicas argentinas y feeds RSS de medios locales.
