@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { db } from '../db/client.js';
 import { botPosts, polls, pollsters } from '../db/schema.js';
 import { logger } from '../lib/logger.js';
@@ -85,10 +85,13 @@ async function handleMarketMove(
   const cap = await canPostNow({ now: new Date(), candidateFocus: payload.candidate, bypassQuietHours: true, bypassDailyCap: true });
   if (!cap.ok) return { ok: false, reason: cap.reason ?? 'cap_unknown' };
 
+  const priceHistory = await fetchPriceHistory(payload.marketId, payload.candidate);
+
   const card = marketMoveCard({
     event: payload,
     timestamp: nowStr(),
     handle: HANDLE,
+    priceHistory,
   });
 
   const filename = `event-${eventId}-market-move`;
@@ -215,3 +218,17 @@ async function handleHotNews(
 
   return { ok: true, postId: inserted[0].id };
 }
+
+async function fetchPriceHistory(marketId: string, candidate: string): Promise<number[]> {
+  const result = await db.execute(sql`
+    SELECT date_trunc('hour', ts) AS hour, AVG(price::float) AS price
+    FROM market_prices
+    WHERE market_id = ${marketId}
+      AND candidate = ${candidate}
+      AND ts > NOW() - INTERVAL '7 days'
+    GROUP BY hour
+    ORDER BY hour
+  `);
+  return (result.rows as Array<{ price: number }>).map((r) => r.price);
+}
+
