@@ -12,6 +12,25 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: timba
+          POSTGRES_PASSWORD: timba
+          POSTGRES_DB: timba
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://timba:timba@localhost:5432/timba
+      NODE_ENV: test
+
     steps:
       - uses: actions/checkout@v4
 
@@ -29,13 +48,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Run migrations
+        run: pnpm db:migrate
+
       - name: Typecheck
         run: pnpm typecheck
 
       - name: Test
         run: pnpm test
-        env:
-          # Dummy values to satisfy zod env schema in src/lib/env.ts
-          # Tests should not hit real services.
-          DATABASE_URL: postgresql://test:test@localhost:5432/test
-          NODE_ENV: test
