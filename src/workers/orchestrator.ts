@@ -11,6 +11,7 @@ import { runPollsIngest } from '../sources/polls/ingest.js';
 import { runMarketMoveWatcher } from '../trigger/watchers/market-move.js';
 import { runNewPollWatcher } from '../trigger/watchers/new-poll.js';
 import { runHotNewsWatcher } from '../trigger/watchers/hot-news.js';
+import { runCrossoverWatcher } from '../trigger/watchers/duelo-crossover.js';
 import { runTriggerOrchestrator } from '../trigger/orchestrator.js';
 import { runMorningBrief } from '../trigger/morning-brief.js';
 import { runWeeklyRecap } from '../trigger/weekly-recap.js';
@@ -88,6 +89,9 @@ async function main() {
     runNewPollWatcher().then(() => undefined)));
   cron.schedule('*/5 * * * *', singleflight('hot-news-watcher', () =>
     runHotNewsWatcher({ relevanceThreshold: 0.7 }).then(() => undefined)));
+  // Crossover watcher cada 30 min (overtakes son raros, no vale chequear más seguido)
+  cron.schedule('*/30 * * * *', singleflight('crossover-watcher', () =>
+    runCrossoverWatcher().then(() => undefined)));
 
   // Trigger orchestrator: cada 2 min consume events y genera drafts
   cron.schedule('*/2 * * * *', singleflight('trigger-orchestrator', () =>

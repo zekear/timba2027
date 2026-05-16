@@ -58,5 +58,26 @@ export const hotNewsEventSchema = z.object({
 });
 export type HotNewsEvent = z.infer<typeof hotNewsEventSchema>;
 
-export const EVENT_TYPES = ['MARKET_MOVE', 'NEW_POLL', 'HOT_NEWS'] as const;
+/**
+ * Un CROSSOVER event captura un overtake en el ranking del top 5 del mercado
+ * presidencial: un candidato pasa a otro entre la ventana de hace 24h y ahora.
+ *
+ * Diseño: detectamos pairs (A, B) donde A.rank ahora < B.rank ahora pero
+ * A.rank ayer > B.rank ayer (o sea, A pasó a B). Para ruido mínimo, solo
+ * emitimos cuando el cambio se sostiene (no flicker dentro del día).
+ */
+export const crossoverEventSchema = z.object({
+  marketId: z.string(),
+  passer: z.string(),         // candidato que sube
+  passed: z.string(),         // candidato que es pasado
+  rankNow: z.number().int().min(1).max(5),
+  rankBefore: z.number().int().min(1).max(5),
+  passerPctNow: z.number(),
+  passedPctNow: z.number(),
+  passerPctBefore: z.number(),
+  passedPctBefore: z.number(),
+});
+export type CrossoverEvent = z.infer<typeof crossoverEventSchema>;
+
+export const EVENT_TYPES = ['MARKET_MOVE', 'NEW_POLL', 'HOT_NEWS', 'CROSSOVER'] as const;
 export type EventType = typeof EVENT_TYPES[number];

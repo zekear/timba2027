@@ -4,11 +4,12 @@ import { botPosts, polls, pollsters } from '../db/schema.js';
 import { logger } from '../lib/logger.js';
 import { claimNextPendingEvent, markEventProcessed, markEventDiscarded } from './events.js';
 import { canPostNow } from './caps.js';
-import { marketMoveEventSchema, newPollEventSchema, hotNewsEventSchema } from './types.js';
+import { marketMoveEventSchema, newPollEventSchema, hotNewsEventSchema, crossoverEventSchema } from './types.js';
 import { renderToPng } from '../render/compose.js';
 import { marketMoveCard } from '../render/cards/market-move.js';
 import { newPollCard } from '../render/cards/new-poll.js';
 import { hotNewsCard } from '../render/cards/hot-news.js';
+import { dueloCrossoverCard } from '../render/cards/duelo-crossover.js';
 import { generateCaption } from '../caption/generate.js';
 import { env } from '../lib/env.js';
 
@@ -53,6 +54,11 @@ export async function runTriggerOrchestrator(): Promise<OrchestratorStats> {
         case 'HOT_NEWS': {
           const payload = hotNewsEventSchema.parse(ev.payload);
           result = await handleHotNews(ev.id, payload);
+          break;
+        }
+        case 'CROSSOVER': {
+          const payload = crossoverEventSchema.parse(ev.payload);
+          result = await handleCrossover(ev.id, payload);
           break;
         }
         default:
@@ -271,4 +277,41 @@ async function fetchAllBuckets(
     pctNow: r.pct_now,
     deltaPct: r.delta_pct ?? undefined,
   }));
+}
+
+async function handleCrossover(
+  eventId: number,
+  payload: ReturnType<typeof crossoverEventSchema.parse>,
+): Promise<{ ok: true; postId: number } | { ok: false; reason: string }> {
+  const cap = await canPostNow({ now: new Date(), candidateFocus: payload.passer, bypassQuietHours: true, bypassDailyCap: true });
+  if (!cap.ok) return { ok: false, reason: cap.reason ?? 'cap_unknown' };
+
+  const card = dueloCrossoverCard({
+    event: payload,
+    timestamp: nowStr(),
+    handle: HANDLE,
+  });
+
+  const filename = `event-${eventId}-duelo-crossover`;
+  const { relPath } = await renderToPng(card, filename);
+
+  const cap_ = await generateCaption({ shape: 'duelo_crossover', data: payload as unknown as Record<string, unknown> });
+
+  const inserted = await db.insert(botPosts).values({
+    shape: 'duelo_crossover',
+    status: 'draft',
+    caption: cap_.caption,
+    cardPath: relPath,
+    sourceSnapshot: payload as unknown as Record<string, unknown>,
+    llmMetadata: {
+      source: cap_.source,
+      attempts: cap_.attempts,
+      lintViolations: cap_.lintViolations,
+      rawOutputs: cap_.rawOutputs,
+    },
+    eventId,
+    candidateFocus: payload.passer,
+  }).returning({ id: botPosts.id });
+
+  return { ok: true, postId: inserted[0].id };
 }
