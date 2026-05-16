@@ -3,6 +3,7 @@ import { Footer } from '../components/Footer.js';
 import { frame, type CardElement } from '../compose.js';
 import { colors, fonts, sizes } from '../tokens.js';
 import type { MarketMoveEvent } from '../../trigger/types.js';
+import { inflationCard, type InflationBucket } from './inflation.js';
 
 /**
  * Categorizar mercado para elegir Ribbon label + sub-context legible.
@@ -101,11 +102,19 @@ export function marketMoveCard(input: {
   handle: string;
   /** Serie reciente del candidato principal (0-1 o pct, normalizada internamente). */
   priceHistory?: number[];
+  /** Para mercados de inflación: snapshot de todos los buckets del mercado. */
+  allBuckets?: InflationBucket[];
 }): CardElement {
-  const { event, context, timestamp, handle, priceHistory } = input;
+  const { event, context, timestamp, handle, priceHistory, allBuckets } = input;
+
+  // Mercados de inflación: layout especializado (consenso + top 3 buckets).
+  const { ribbon, contextLine, isElectoral } = marketContext(event.marketSlug, event.marketQuestion);
+  if (!isElectoral && allBuckets && allBuckets.length >= 2) {
+    return inflationCard({ event, allBuckets, timestamp, handle, priceHistoryConsenso: priceHistory });
+  }
+
   const sign = event.deltaPct >= 0 ? '+' : '';
   const arrow = event.deltaPct >= 0 ? '▲' : '▼';
-  const { ribbon, contextLine } = marketContext(event.marketSlug, event.marketQuestion);
   const ribbonSourceLabel = ribbon.includes('PRESIDENCIA') ? 'POLYMARKET' : ribbon;
 
   const spark = priceHistory && priceHistory.length >= 2 ? sparkline(priceHistory, 280, 80) : null;
