@@ -30,6 +30,12 @@ jobs:
     env:
       DATABASE_URL: postgresql://timba:timba@localhost:5432/timba
       NODE_ENV: test
+      # Dummies para satisfacer validación de oauthCreds en x-write-client.
+      # Los tests de ese módulo mockean fetch, no llaman a X real.
+      X_API_CONSUMER_KEY: dummy
+      X_API_CONSUMER_SECRET: dummy
+      X_API_ACCESS_TOKEN: dummy
+      X_API_ACCESS_TOKEN_SECRET: dummy
 
     steps:
       - uses: actions/checkout@v4
@@ -55,4 +61,6 @@ jobs:
         run: pnpm typecheck
 
       - name: Test
-        run: pnpm test
+        # Excluyo tests/llm/cli.test.ts: spawnea el binario `claude` real,
+        # no viable en CI público. Se corre localmente.
+        run: pnpm test -- --exclude tests/llm/cli.test.ts
