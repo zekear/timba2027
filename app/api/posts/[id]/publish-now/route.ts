@@ -1,12 +1,9 @@
 import { NextResponse } from 'next/server';
-import { eq } from 'drizzle-orm';
-import { db } from '../../../../../src/db/client.js';
-import { botPosts } from '../../../../../src/db/schema.js';
-import { approveDraft, schedulePost } from '../../../../../src/publish/transitions.js';
+import { publishOneNow } from '../../../../../src/publish/publisher.js';
 
 /**
- * Approve + schedule en una sola request — bypasea el delay de soft-launch.
- * El publisher worker hará el publish en su próximo tick.
+ * "Publish now": aprueba (si está en draft), schedulea y publica YA a X,
+ * bypassing window/mode pero respetando kill switch.
  */
 export async function POST(
   _req: Request,
@@ -15,23 +12,10 @@ export async function POST(
   const { id } = await params;
   const numId = Number(id);
   if (!Number.isInteger(numId)) return new NextResponse('Bad id', { status: 400 });
-  try {
-    const [p] = await db.select().from(botPosts).where(eq(botPosts.id, numId));
-    if (!p) return NextResponse.json({ ok: false, error: 'not found' }, { status: 404 });
-    let effectiveStatus = p.status;
-    if (effectiveStatus === 'draft') {
-      await approveDraft(numId);
-      effectiveStatus = 'approved';
-    }
-    if (effectiveStatus === 'approved') {
-      await schedulePost(numId);
-      return NextResponse.json({ ok: true });
-    }
-    return NextResponse.json(
-      { ok: false, error: `cannot publish-now from status=${p.status}` },
-      { status: 400 },
-    );
-  } catch (err) {
-    return NextResponse.json({ ok: false, error: (err as Error).message }, { status: 400 });
+  const result = await publishOneNow(numId);
+  if (result.ok) {
+    return NextResponse.json({ ok: true, xPostId: result.xPostId });
   }
+  const status = result.reason === 'not_found' ? 404 : 400;
+  return NextResponse.json({ ok: false, error: result.reason }, { status });
 }

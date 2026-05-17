@@ -5,7 +5,7 @@ import { db } from '../db/client.js';
 import { env } from '../lib/env.js';
 import { logger } from '../lib/logger.js';
 import { uploadMedia, createTweet } from './x-write-client.js';
-import { markPublished } from './transitions.js';
+import { markPublished, approveDraft, schedulePost } from './transitions.js';
 import { policyForMode, type PublishMode } from './modes.js';
 import { adminState } from '../db/schema.js';
 
@@ -19,7 +19,95 @@ async function loadAdminOverrides(): Promise<{ mode?: string; killSwitch?: boole
   };
 }
 
+async function isKillSwitchActive(): Promise<boolean> {
+  const overrides = await loadAdminOverrides();
+  if (overrides.killSwitch !== undefined) return overrides.killSwitch;
+  if (process.env.KILL_SWITCH !== undefined) return process.env.KILL_SWITCH === 'true';
+  return env.KILL_SWITCH;
+}
+
 const MAX_PER_RUN = 3;
+
+type ThreadEntry = { caption: string; cardPath?: string };
+
+interface SchedulableRow {
+  id: number;
+  caption: string;
+  card_path: string;
+  thread: ThreadEntry[] | null;
+}
+
+/**
+ * Publica un post scheduled (o ya marcado para publish) a X: sube media,
+ * postea tweet principal, postea replies del thread si hay, marca published.
+ * No verifica window ni cap — los chequea quien llama (usado tanto por el
+ * cron como por el botón "publish now" del admin).
+ */
+async function publishRow(row: SchedulableRow): Promise<string> {
+  const cardBuf = await readFile(resolve(process.cwd(), row.card_path));
+  const mediaId = await uploadMedia(cardBuf, 'image/png');
+  const headTweetId = await createTweet({ text: row.caption, mediaIds: [mediaId] });
+
+  let prevId = headTweetId;
+  const thread = Array.isArray(row.thread) ? row.thread : [];
+  for (const entry of thread) {
+    const mediaIds: string[] = [];
+    if (entry.cardPath) {
+      const buf = await readFile(resolve(process.cwd(), entry.cardPath));
+      mediaIds.push(await uploadMedia(buf, 'image/png'));
+    }
+    prevId = await createTweet({ text: entry.caption, mediaIds, replyToTweetId: prevId });
+  }
+
+  await markPublished(row.id, headTweetId);
+  if (thread.length > 0) {
+    logger.info({ postId: row.id, threadLength: thread.length, headTweetId }, 'publisher: thread posted');
+  }
+  return headTweetId;
+}
+
+/**
+ * Publica un post específico AHORA, bypassing window/mode pero respetando
+ * kill switch. Usado por el endpoint admin "publish now".
+ */
+export async function publishOneNow(
+  postId: number,
+): Promise<{ ok: true; xPostId: string } | { ok: false; reason: string }> {
+  if (await isKillSwitchActive()) {
+    return { ok: false, reason: 'kill_switch_active' };
+  }
+
+  const r = await db.execute(sql`
+    SELECT id, status, caption, card_path, thread FROM bot_posts WHERE id = ${postId}
+  `);
+  if (r.rows.length === 0) return { ok: false, reason: 'not_found' };
+  const row = r.rows[0] as unknown as SchedulableRow & { status: string };
+
+  if (row.status === 'published') {
+    return { ok: false, reason: 'already_published' };
+  }
+  if (row.status === 'killed') {
+    return { ok: false, reason: 'killed' };
+  }
+  // Asegurar que esté en scheduled antes de publicar — re-usamos las
+  // transitions para que el log y los timestamps queden consistentes con
+  // los publishes automáticos.
+  if (row.status === 'draft') {
+    await approveDraft(postId);
+    await schedulePost(postId);
+  } else if (row.status === 'approved') {
+    await schedulePost(postId);
+  }
+
+  try {
+    const xPostId = await publishRow(row);
+    logger.info({ postId, xPostId }, 'publisher: published via publishOneNow');
+    return { ok: true, xPostId };
+  } catch (err) {
+    logger.error({ postId, err: (err as Error).message }, 'publisher: publishOneNow failed');
+    return { ok: false, reason: (err as Error).message };
+  }
+}
 
 export interface PublisherStats {
   scheduled: number;
@@ -43,14 +131,8 @@ export async function runPublisher(): Promise<PublisherStats> {
   // admin_state overrides env vars (allows runtime toggle from /admin)
   const overrides = await loadAdminOverrides();
   const mode = (overrides.mode ?? process.env.PUBLISH_MODE ?? env.PUBLISH_MODE) as PublishMode;
-  const killSwitch =
-    overrides.killSwitch !== undefined
-      ? overrides.killSwitch
-      : process.env.KILL_SWITCH !== undefined
-        ? process.env.KILL_SWITCH === 'true'
-        : env.KILL_SWITCH;
 
-  if (killSwitch) {
+  if (await isKillSwitchActive()) {
     stats.skippedKillSwitch = await countScheduled();
     logger.warn({ mode }, 'publisher: KILL_SWITCH active — skipping');
     return stats;
@@ -75,40 +157,10 @@ export async function runPublisher(): Promise<PublisherStats> {
   `);
   stats.scheduled = scheduled.rows.length;
 
-  type ThreadEntry = { caption: string; cardPath?: string };
-  for (const row of scheduled.rows as Array<{
-    id: number;
-    caption: string;
-    card_path: string;
-    thread: ThreadEntry[] | null;
-  }>) {
+  for (const row of scheduled.rows as unknown as SchedulableRow[]) {
     try {
-      // Tweet principal con su card
-      const cardBuf = await readFile(resolve(process.cwd(), row.card_path));
-      const mediaId = await uploadMedia(cardBuf, 'image/png');
-      const headTweetId = await createTweet({ text: row.caption, mediaIds: [mediaId] });
-
-      // Replies del thread (si hay) — chain de in_reply_to_tweet_id
-      let prevId = headTweetId;
-      const thread = Array.isArray(row.thread) ? row.thread : [];
-      for (const entry of thread) {
-        const mediaIds: string[] = [];
-        if (entry.cardPath) {
-          const buf = await readFile(resolve(process.cwd(), entry.cardPath));
-          mediaIds.push(await uploadMedia(buf, 'image/png'));
-        }
-        prevId = await createTweet({
-          text: entry.caption,
-          mediaIds,
-          replyToTweetId: prevId,
-        });
-      }
-
-      await markPublished(row.id, headTweetId);
+      await publishRow(row);
       stats.published++;
-      if (thread.length > 0) {
-        logger.info({ postId: row.id, threadLength: thread.length, headTweetId }, 'publisher: thread posted');
-      }
     } catch (err) {
       stats.failed++;
       logger.error(
