@@ -75,11 +75,13 @@ export async function uploadMedia(
   const url = `${env.X_API_BASE}/media/upload`;
   const blob = new Blob([buffer], { type: mimeType });
   const form = new FormData();
-  // GIFs animados deben usar la categoría 'tweet_gif' para que X los trate
-  // como media nativa animada (auto-play, sin botón de play estático).
+  // X API v2 acepta enumeration: tweet_image | dm_image | subtitles.
+  // (tweet_gif fue removido del endpoint simple; para GIF animado
+  // alcanza con `image/gif` MIME + category 'tweet_image' — Twitter
+  // detecta la animación del binary y la respeta en el feed.)
   const isGif = mimeType === 'image/gif';
   form.append('media', blob, isGif ? 'card.gif' : 'card.png');
-  form.append('media_category', isGif ? 'tweet_gif' : 'tweet_image');
+  form.append('media_category', 'tweet_image');
 
   const res = await fetchWithTimeout(url, {
     timeoutMs: MEDIA_TIMEOUT_MS,
