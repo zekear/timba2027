@@ -204,6 +204,11 @@ export const botPosts = pgTable(
     publishedAt: timestamp('published_at', { withTimezone: true }),
     xPostId: text('x_post_id'),
     metrics: jsonb('metrics'),
+    // Tracking de fallos al publicar a X. {count, lastAt, lastReason}.
+    // Si count >= MAX_FAILURES en publisher.ts, el post se marca killed
+    // automáticamente para evitar retry loops cuando hay un bug de data
+    // o media inválido.
+    publishFailures: jsonb('publish_failures').$type<{ count: number; lastAt: string; lastReason: string }>(),
     // Para shape='weekly_recap' u otros threads: array de replies después del tweet principal.
     // null o [] = single tweet (comportamiento existente). Cada entry: { caption, cardPath?, xPostId? }.
     thread: jsonb('thread'),

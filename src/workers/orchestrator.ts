@@ -14,6 +14,7 @@ import { runHotNewsWatcher } from '../trigger/watchers/hot-news.js';
 import { runCrossoverWatcher } from '../trigger/watchers/duelo-crossover.js';
 import { runMilestoneWatcher } from '../trigger/watchers/milestone.js';
 import { runMetricsCollector } from './metrics-collector.js';
+import { runCostReporter } from './cost-reporter.js';
 import { runTriggerOrchestrator } from '../trigger/orchestrator.js';
 import { runMorningBrief } from '../trigger/morning-brief.js';
 import { runWeeklyRecap } from '../trigger/weekly-recap.js';
@@ -101,6 +102,10 @@ async function main() {
   // morning-brief). 1 read op por run (bulk endpoint, hasta 100 tweets).
   cron.schedule('0 12 * * *', singleflight('metrics-collector', () =>
     runMetricsCollector().then(() => undefined)));
+  // Cost reporter diario a las 23:50 UTC (20:50 ARG, cerca del fin del día).
+  // Lee el log de las últimas 24h y suma los costos de las llamadas X API.
+  cron.schedule('50 23 * * *', singleflight('cost-reporter', () =>
+    runCostReporter().then(() => undefined)));
 
   // Trigger orchestrator: cada 2 min consume events y genera drafts
   cron.schedule('*/2 * * * *', singleflight('trigger-orchestrator', () =>
