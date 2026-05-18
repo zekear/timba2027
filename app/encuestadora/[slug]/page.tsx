@@ -1,9 +1,10 @@
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, and, sql } from 'drizzle-orm';
+import { basename } from 'node:path';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { db } from '../../../src/db/client.js';
-import { pollsters, polls } from '../../../src/db/schema.js';
+import { pollsters, polls, botPosts } from '../../../src/db/schema.js';
 import { Header } from '../../components/public/Header.js';
 import { Footer } from '../../components/public/Footer.js';
 import { PollResultsTable } from '../../components/public/PollResultsTable.js';
@@ -16,9 +17,26 @@ export async function generateMetadata({
   const { slug } = await params;
   const [pollster] = await db.select().from(pollsters).where(eq(pollsters.slug, slug));
   if (!pollster) return { title: 'Encuestadora' };
+  const title = pollster.displayName;
+  const description = `Histórico de encuestas de ${pollster.displayName}.`;
+  // OG: usar la card del último new_poll publicado de esta encuestadora.
+  const [latest] = await db
+    .select({ cardPath: botPosts.cardPath })
+    .from(botPosts)
+    .where(
+      and(
+        eq(botPosts.status, 'published'),
+        eq(botPosts.shape, 'new_poll'),
+        sql`source_snapshot->>'pollsterSlug' = ${slug}`,
+      ),
+    )
+    .orderBy(desc(botPosts.publishedAt))
+    .limit(1);
+  const ogImage = latest ? `/api/cards/${encodeURIComponent(basename(latest.cardPath))}` : '/og-default.png';
   return {
-    title: pollster.displayName,
-    description: `Histórico de encuestas de ${pollster.displayName}.`,
+    title,
+    description,
+    openGraph: { title, description, images: [ogImage] },
   };
 }
 
