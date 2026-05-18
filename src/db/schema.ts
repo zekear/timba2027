@@ -110,6 +110,10 @@ export const pollsters = pgTable('pollsters', {
   xHandle: text('x_handle').notNull().unique(),  // 'opinaiagency' (sin @)
   xUserId: text('x_user_id'),                    // populated después del primer fetch
   lastSeenTweetId: text('last_seen_tweet_id'),
+  // Timestamps para frecuencia adaptativa: cuanto más activa la encuestadora,
+  // más seguido la pulleamos.
+  lastPolledAt: timestamp('last_polled_at', { withTimezone: true }),   // último ts de fetch (haya o no nuevos tweets)
+  lastActiveAt: timestamp('last_active_at', { withTimezone: true }),   // último ts de tweet ingestado con encuesta
   active: boolean('active').notNull().default(true),
   notes: text('notes'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),

@@ -7,8 +7,23 @@ import { processTweet, type ProcessTweetResult } from './pipeline.js';
 
 const TWEETS_PER_POLLSTER = 10;
 
+// Frecuencia adaptativa: cuanto menos activa la encuestadora, menos seguido la pulleamos.
+// Trade-off entre fresh data y costo de X API reads.
+const ACTIVE_INTERVAL_HOURS = 12;    // activa (postó últimos 30d): cada 12h
+const QUIET_INTERVAL_HOURS = 24;     // tranquila (30-180d): cada 24h
+const DORMANT_INTERVAL_HOURS = 168;  // dormant (>180d): 1×/semana
+
+function intervalForPollster(lastActiveAt: Date | null): number {
+  if (!lastActiveAt) return QUIET_INTERVAL_HOURS; // nunca registró actividad → tratar como quiet
+  const daysSinceActive = (Date.now() - new Date(lastActiveAt).getTime()) / (1000 * 60 * 60 * 24);
+  if (daysSinceActive <= 30) return ACTIVE_INTERVAL_HOURS;
+  if (daysSinceActive <= 180) return QUIET_INTERVAL_HOURS;
+  return DORMANT_INTERVAL_HOURS;
+}
+
 export interface PollsIngestStats {
   pollsters: number;
+  pollstersSkipped: number;
   pollsterErrors: number;
   tweetsSeen: number;
   inserted: number;
@@ -19,6 +34,7 @@ export async function runPollsIngest(): Promise<PollsIngestStats> {
   const start = Date.now();
   const stats: PollsIngestStats = {
     pollsters: 0,
+    pollstersSkipped: 0,
     pollsterErrors: 0,
     tweetsSeen: 0,
     inserted: 0,
@@ -28,6 +44,15 @@ export async function runPollsIngest(): Promise<PollsIngestStats> {
   const active = await db.select().from(pollsters).where(eq(pollsters.active, true));
 
   for (const p of active) {
+    // Frecuencia adaptativa: skip si su interval no expiró
+    const intervalHours = intervalForPollster(p.lastActiveAt);
+    if (p.lastPolledAt) {
+      const hoursSincePoll = (Date.now() - new Date(p.lastPolledAt).getTime()) / (1000 * 60 * 60);
+      if (hoursSincePoll < intervalHours) {
+        stats.pollstersSkipped++;
+        continue;
+      }
+    }
     stats.pollsters++;
     try {
       // Resolve x_user_id si no está cacheado
@@ -47,15 +72,19 @@ export async function runPollsIngest(): Promise<PollsIngestStats> {
 
       // Update checkpoint to the highest tweet id we saw (X snowflake ids are
       // strings of equal length where lexicographic order matches numeric order)
+      const now = new Date();
+      const update: Record<string, unknown> = { lastPolledAt: now };
       if (page.tweets.length > 0) {
         const maxId = page.tweets.reduce(
           (acc, t) => (t.id > acc ? t.id : acc),
           page.tweets[0].id,
         );
         if (!p.lastSeenTweetId || maxId > p.lastSeenTweetId) {
-          await db.update(pollsters).set({ lastSeenTweetId: maxId }).where(eq(pollsters.id, p.id));
+          update.lastSeenTweetId = maxId;
         }
+        update.lastActiveAt = now;
       }
+      await db.update(pollsters).set(update).where(eq(pollsters.id, p.id));
 
       for (const tweet of page.tweets) {
         const mediaKeys = tweet.attachments?.media_keys ?? [];

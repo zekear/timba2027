@@ -56,6 +56,7 @@ export async function getUserByUsername(username: string): Promise<XUser> {
   const res = await fetchWithTimeout(url, { timeoutMs: 10_000, headers: authHeaders() });
   if (!res.ok) throw new Error(`X getUserByUsername ${username} failed: ${res.status} ${await res.text()}`);
   const json = await res.json() as { data?: unknown };
+  logger.info({ endpoint: 'users/by/username', cost: 0.005, type: 'read', username }, 'x-api: call');
   return xUserSchema.parse(json.data);
 }
 
@@ -87,6 +88,10 @@ export async function getUserTimeline(
     includes?: { media?: unknown[] };
     meta?: { result_count?: number };
   };
+  logger.info(
+    { endpoint: 'users/tweets', cost: 0.005, type: 'read', userId, returned: json.data?.length ?? 0 },
+    'x-api: call',
+  );
 
   const tweets: XTweet[] = (json.data ?? []).flatMap((item) => {
     const result = xTweetSchema.safeParse(item);
