@@ -70,13 +70,16 @@ function oauthHeader(method: 'POST' | 'GET', url: string): string {
  */
 export async function uploadMedia(
   buffer: Buffer,
-  mimeType: 'image/png' | 'image/jpeg',
+  mimeType: 'image/png' | 'image/jpeg' | 'image/gif',
 ): Promise<string> {
   const url = `${env.X_API_BASE}/media/upload`;
   const blob = new Blob([buffer], { type: mimeType });
   const form = new FormData();
-  form.append('media', blob, 'card.png');
-  form.append('media_category', 'tweet_image');
+  // GIFs animados deben usar la categoría 'tweet_gif' para que X los trate
+  // como media nativa animada (auto-play, sin botón de play estático).
+  const isGif = mimeType === 'image/gif';
+  form.append('media', blob, isGif ? 'card.gif' : 'card.png');
+  form.append('media_category', isGif ? 'tweet_gif' : 'tweet_image');
 
   const res = await fetchWithTimeout(url, {
     timeoutMs: MEDIA_TIMEOUT_MS,

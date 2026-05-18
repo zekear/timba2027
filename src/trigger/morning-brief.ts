@@ -3,7 +3,9 @@ import { db } from '../db/client.js';
 import { botPosts } from '../db/schema.js';
 import { logger } from '../lib/logger.js';
 import { renderToPng } from '../render/compose.js';
+import { renderFramesToGif } from '../render/gif.js';
 import { morningBriefCard } from '../render/cards/morning-brief.js';
+import { morningBriefFrames } from '../render/frames.js';
 import { generateCaption } from '../caption/generate.js';
 import { canPostNow } from './caps.js';
 import { env } from '../lib/env.js';
@@ -109,14 +111,20 @@ export async function runMorningBrief(): Promise<{ ok: boolean; postId?: number;
   // Cover card (mismo que antes)
   const date = new Date();
   const dateStr = `${date.getUTCDate()} ${['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][date.getUTCMonth()]} ${date.getUTCFullYear()}`;
-  const card = morningBriefCard({
+  const cardInput = {
     topCandidates: top,
     marketDate: dateStr,
     timestamp: '09:00 GMT-3',
     handle: env.BOT_HANDLE,
-  });
+  };
   const filename = `morning-brief-${date.toISOString().slice(0, 10)}`;
-  const { relPath } = await renderToPng(card, filename);
+  let relPath: string;
+  if (env.ANIMATED_CARDS) {
+    const frames = morningBriefFrames(cardInput);
+    ({ relPath } = await renderFramesToGif(frames, filename));
+  } else {
+    ({ relPath } = await renderToPng(morningBriefCard(cardInput), filename));
+  }
 
   // Tweet 1 (head): caption original — usa LLM con shape morning_brief.
   // Sigue siendo el "hook" del thread.

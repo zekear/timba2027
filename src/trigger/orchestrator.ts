@@ -6,6 +6,8 @@ import { claimNextPendingEvent, markEventProcessed, markEventDiscarded } from '.
 import { canPostNow } from './caps.js';
 import { marketMoveEventSchema, newPollEventSchema, hotNewsEventSchema, crossoverEventSchema, milestoneEventSchema } from './types.js';
 import { renderToPng } from '../render/compose.js';
+import { renderFramesToGif } from '../render/gif.js';
+import { marketMoveFrames, dueloCrossoverFrames } from '../render/frames.js';
 import { marketMoveCard } from '../render/cards/market-move.js';
 import { newPollCard } from '../render/cards/new-poll.js';
 import { hotNewsCard } from '../render/cards/hot-news.js';
@@ -111,16 +113,30 @@ async function handleMarketMove(
     priceHistory = await fetchPriceHistory(payload.marketId, payload.candidate);
   }
 
-  const card = marketMoveCard({
-    event: payload,
-    timestamp: nowStr(),
-    handle: HANDLE,
-    priceHistory,
-    allBuckets,
-  });
-
+  // Animated GIF si flag on Y el mercado NO es de inflación (esos usan card
+  // especializada que no anima bien con la lógica genérica de counter).
+  const useAnimated = env.ANIMATED_CARDS && !isInflation;
   const filename = `event-${eventId}-market-move`;
-  const { relPath } = await renderToPng(card, filename);
+  let relPath: string;
+  if (useAnimated) {
+    const frames = marketMoveFrames({
+      event: payload,
+      timestamp: nowStr(),
+      handle: HANDLE,
+      priceHistory,
+      allBuckets,
+    });
+    ({ relPath } = await renderFramesToGif(frames, filename));
+  } else {
+    const card = marketMoveCard({
+      event: payload,
+      timestamp: nowStr(),
+      handle: HANDLE,
+      priceHistory,
+      allBuckets,
+    });
+    ({ relPath } = await renderToPng(card, filename));
+  }
 
   const cap_ = await generateCaption({
     shape: 'market_move',
@@ -292,14 +308,15 @@ async function handleCrossover(
   const cap = await canPostNow({ now: new Date(), candidateFocus: payload.passer, bypassQuietHours: true, bypassDailyCap: true });
   if (!cap.ok) return { ok: false, reason: cap.reason ?? 'cap_unknown' };
 
-  const card = dueloCrossoverCard({
-    event: payload,
-    timestamp: nowStr(),
-    handle: HANDLE,
-  });
-
   const filename = `event-${eventId}-duelo-crossover`;
-  const { relPath } = await renderToPng(card, filename);
+  let relPath: string;
+  if (env.ANIMATED_CARDS) {
+    const frames = dueloCrossoverFrames({ event: payload, timestamp: nowStr(), handle: HANDLE });
+    ({ relPath } = await renderFramesToGif(frames, filename));
+  } else {
+    const card = dueloCrossoverCard({ event: payload, timestamp: nowStr(), handle: HANDLE });
+    ({ relPath } = await renderToPng(card, filename));
+  }
 
   const cap_ = await generateCaption({ shape: 'duelo_crossover', data: payload as unknown as Record<string, unknown> });
 

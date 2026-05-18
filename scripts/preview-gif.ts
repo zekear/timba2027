@@ -1,61 +1,75 @@
 /**
- * Spike de cards animadas: genera 1 GIF de prueba con el delta de un
- * market-move haciendo "counter up" desde 0 hasta el delta final.
+ * Genera los 3 GIFs de preview para validar las cards animadas.
  *
  * Run: pnpm tsx scripts/preview-gif.ts
- * Output: storage/cards/preview-market-move-animated.gif
+ * Output: storage/cards/preview-*-animated.gif
  */
 import { env } from '../src/lib/env.js';
-import { marketMoveCard } from '../src/render/cards/market-move.js';
 import { renderFramesToGif } from '../src/render/gif.js';
-import type { MarketMoveEvent } from '../src/trigger/types.js';
+import { marketMoveFrames, dueloCrossoverFrames, morningBriefFrames } from '../src/render/frames.js';
 
-const finalDelta = 5.0;
-const finalPriceNow = 0.34;
-const finalPriceThen = 0.29;
-const FRAMES = 18;
+const ts = '14:32 GMT-3';
+const handle = env.BOT_HANDLE;
 
-const baseEvent: MarketMoveEvent = {
-  marketId: 'm3',
-  marketSlug: 'argentina-presidential-election-winner',
-  marketQuestion: 'Who will win the 2027 Argentine presidential election?',
-  candidate: 'Dante Gebel',
-  priceNow: finalPriceNow,
-  priceThen: finalPriceThen,
-  deltaPct: finalDelta,
-  windowHours: 6,
-  siblings: [],
-};
-
-// Easing easeOutCubic
-function easeOut(t: number): number {
-  return 1 - Math.pow(1 - t, 3);
-}
-
-const frames = Array.from({ length: FRAMES }, (_, i) => {
-  // últimos 4 frames pause (hold final)
-  const t = Math.min(1, easeOut(i / (FRAMES - 5)));
-  const progress = i >= FRAMES - 4 ? 1 : t;
-  const event: MarketMoveEvent = {
-    ...baseEvent,
-    deltaPct: finalDelta * progress,
-    priceNow: finalPriceThen + (finalPriceNow - finalPriceThen) * progress,
-  };
-  return marketMoveCard({
-    event,
-    timestamp: '14:32 GMT-3',
-    handle: env.BOT_HANDLE,
-    // Sparkline opcional pero estática a través del GIF (sino sería muy ruidoso)
-    priceHistory: undefined,
-  });
+// 1. Market move (counter del delta)
+console.log('1/3 market-move...');
+let start = Date.now();
+const mmFrames = marketMoveFrames({
+  event: {
+    marketId: 'm3',
+    marketSlug: 'argentina-presidential-election-winner',
+    marketQuestion: 'Who will win the 2027 Argentine presidential election?',
+    candidate: 'Dante Gebel',
+    priceNow: 0.081,
+    priceThen: 0.0515,
+    deltaPct: 5.0,
+    windowHours: 6,
+    siblings: [],
+  },
+  timestamp: ts,
+  handle,
 });
+await renderFramesToGif(mmFrames, 'preview-market-move-animated');
+console.log(`  done in ${Date.now() - start}ms`);
 
-console.log(`Generating ${FRAMES} frames at 800x450...`);
-const start = Date.now();
-const { absPath } = await renderFramesToGif(frames, 'preview-market-move-animated', {
-  width: 800,
-  height: 450,
-  frameDelayMs: 80,
+// 2. Duelo crossover (pcts interpolan)
+console.log('2/3 duelo-crossover...');
+start = Date.now();
+const dcFrames = dueloCrossoverFrames({
+  event: {
+    marketId: 'm3',
+    passer: 'Javier Milei',
+    passed: 'Axel Kicillof',
+    rankNow: 1,
+    rankBefore: 2,
+    passerPctNow: 26.4,
+    passerPctBefore: 22.1,
+    passedPctNow: 24.8,
+    passedPctBefore: 27.5,
+  },
+  timestamp: ts,
+  handle,
 });
-console.log(`Done in ${Date.now() - start}ms → ${absPath}`);
+await renderFramesToGif(dcFrames, 'preview-duelo-animated');
+console.log(`  done in ${Date.now() - start}ms`);
+
+// 3. Morning brief (barras del top 5 llenándose)
+console.log('3/3 morning-brief...');
+start = Date.now();
+const mbFrames = morningBriefFrames({
+  topCandidates: [
+    { candidato: 'Javier Milei', pct: 49.5, deltaPct: -4.0 },
+    { candidato: 'Axel Kicillof', pct: 32.5, deltaPct: 0.8 },
+    { candidato: 'Dante Gebel', pct: 5.1, deltaPct: 1.2 },
+    { candidato: 'Sergio Massa', pct: 3.3, deltaPct: 0.4 },
+    { candidato: 'Juan Grabois', pct: 2.6, deltaPct: -0.6 },
+  ],
+  marketDate: '18 may 2026',
+  timestamp: '09:00 GMT-3',
+  handle,
+});
+await renderFramesToGif(mbFrames, 'preview-morning-brief-animated');
+console.log(`  done in ${Date.now() - start}ms`);
+
+console.log('\nDone. 3 GIFs en storage/cards/preview-*-animated.gif');
 process.exit(0);
