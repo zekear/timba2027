@@ -7,6 +7,13 @@ import { morningBriefCard } from '../render/cards/morning-brief.js';
 import { generateCaption } from '../caption/generate.js';
 import { canPostNow } from './caps.js';
 import { env } from '../lib/env.js';
+import { llmTweet } from './weekly-recap.js';
+import { collectNumbers } from '../caption/linter.js';
+
+interface ThreadEntry {
+  caption: string;
+  cardPath?: string;
+}
 
 export async function runMorningBrief(): Promise<{ ok: boolean; postId?: number; reason?: string }> {
   const cap = await canPostNow({ now: new Date(), candidateFocus: null });
@@ -27,7 +34,8 @@ export async function runMorningBrief(): Promise<{ ok: boolean; postId?: number;
     return { ok: false, reason: 'already_drafted_today' };
   }
 
-  const rows = await db.execute(sql`
+  // Top 5 con delta 7d (cover card)
+  const top5Rows = await db.execute(sql`
     WITH latest AS (
       SELECT DISTINCT ON (candidate) candidate, price::float AS price
       FROM market_prices mp JOIN markets m ON m.id = mp.market_id
@@ -46,47 +54,134 @@ export async function runMorningBrief(): Promise<{ ok: boolean; postId?: number;
     ORDER BY l.price DESC LIMIT 5;
   `);
 
-  if (rows.rows.length < 3) {
-    logger.warn({ count: rows.rows.length }, 'morning-brief: not enough data');
+  if (top5Rows.rows.length < 3) {
+    logger.warn({ count: top5Rows.rows.length }, 'morning-brief: not enough data');
     return { ok: false, reason: 'insufficient_data' };
   }
 
-  const top = (rows.rows as Array<{ candidate: string; pct: number; delta_pct: number }>).map((r) => ({
+  const top = (top5Rows.rows as Array<{ candidate: string; pct: number; delta_pct: number }>).map((r) => ({
     candidato: r.candidate,
     pct: r.pct,
     deltaPct: r.delta_pct,
   }));
 
+  // Top movers 24h (para tweet 2)
+  const moversRows = await db.execute(sql`
+    WITH latest AS (
+      SELECT DISTINCT ON (candidate) candidate, price::float AS price
+      FROM market_prices mp JOIN markets m ON m.id = mp.market_id
+      WHERE m.slug = 'argentina-presidential-election-winner'
+      ORDER BY candidate, ts DESC
+    ),
+    day_ago AS (
+      SELECT DISTINCT ON (candidate) candidate, price::float AS price
+      FROM market_prices mp JOIN markets m ON m.id = mp.market_id
+      WHERE m.slug = 'argentina-presidential-election-winner'
+        AND ts <= NOW() - INTERVAL '24 hours'
+      ORDER BY candidate, ts DESC
+    )
+    SELECT l.candidate, l.price * 100 AS pct_now, (l.price - COALESCE(d.price, l.price)) * 100 AS delta_pct
+    FROM latest l LEFT JOIN day_ago d USING (candidate)
+    WHERE ABS((l.price - COALESCE(d.price, l.price)) * 100) >= 0.5
+    ORDER BY ABS((l.price - COALESCE(d.price, l.price)) * 100) DESC
+    LIMIT 3;
+  `);
+  const topMovers = (moversRows.rows as Array<{ candidate: string; pct_now: number; delta_pct: number }>).map((r) => ({
+    candidate: r.candidate,
+    pctNow: r.pct_now,
+    deltaPct: r.delta_pct,
+  }));
+
+  // Hot news más relevante en últimas 24h (para tweet 3)
+  const newsRows = await db.execute(sql`
+    SELECT n.source, n.headline, n.url, n.relevance_score::float AS relevance
+    FROM news n
+    WHERE n.tagged_at IS NOT NULL
+      AND n.relevance_score IS NOT NULL
+      AND n.published_at > NOW() - INTERVAL '24 hours'
+    ORDER BY n.relevance_score DESC, n.published_at DESC
+    LIMIT 1;
+  `);
+  const topNews = newsRows.rows.length > 0
+    ? (newsRows.rows[0] as { source: string; headline: string; url: string; relevance: number })
+    : null;
+
+  // Cover card (mismo que antes)
   const date = new Date();
   const dateStr = `${date.getUTCDate()} ${['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][date.getUTCMonth()]} ${date.getUTCFullYear()}`;
-
   const card = morningBriefCard({
     topCandidates: top,
     marketDate: dateStr,
     timestamp: '09:00 GMT-3',
     handle: env.BOT_HANDLE,
   });
-
   const filename = `morning-brief-${date.toISOString().slice(0, 10)}`;
   const { relPath } = await renderToPng(card, filename);
 
+  // Tweet 1 (head): caption original — usa LLM con shape morning_brief.
+  // Sigue siendo el "hook" del thread.
   const captionData = { topCandidates: top };
-  const cap_ = await generateCaption({ shape: 'morning_brief', data: captionData });
+  const head = await generateCaption({ shape: 'morning_brief', data: captionData });
+
+  // Tweet 2: top movers 24h
+  const replies: ThreadEntry[] = [];
+  if (topMovers.length > 0) {
+    const moversText = topMovers
+      .map((m) => `${m.candidate}: ${m.pctNow.toFixed(1)}% (${m.deltaPct >= 0 ? '+' : ''}${m.deltaPct.toFixed(1)}pp/24h)`)
+      .join('\n');
+    const cap = await llmTweet(
+      `Tweet 2 del thread "Morning brief". Sección: movimientos del último día.
+${topMovers.length} candidato${topMovers.length === 1 ? '' : 's'} con movimiento ≥0.5pp en 24h. Reportá sin opinión.
+
+Datos:
+${moversText}
+
+Estructura sugerida: "Últimas 24h: [candidato 1] [delta] (a [pct]%); [candidato 2] [delta] (a [pct]%); ..."`,
+      collectNumbers(topMovers),
+    );
+    replies.push({ caption: cap });
+  }
+
+  // Tweet 3: noticia caliente del día
+  if (topNews) {
+    const cap = await llmTweet(
+      `Tweet 3 del thread "Morning brief". Sección: noticia política caliente del día.
+Una noticia destacada de las últimas 24h (relevancia ${topNews.relevance.toFixed(2)}). Resumí en 1 frase corta y termina con el link.
+
+Datos:
+- Fuente: ${topNews.source}
+- Headline: ${topNews.headline}
+- URL: ${topNews.url}
+
+Estructura: "[Resumen 1 frase corta]. ${topNews.url}" — el link se acorta a t.co (23 chars).`,
+      collectNumbers({ relevance: topNews.relevance }),
+    );
+    replies.push({ caption: cap });
+  }
+
+  // Tweet 4: outro
+  replies.push({
+    caption: `Más en timba2027.com — Polymarket + encuestas + noticias.\n\nSin opinión. Con fuente. 100% automatizado.`,
+  });
 
   const inserted = await db.insert(botPosts).values({
     shape: 'morning_brief',
     status: 'draft',
-    caption: cap_.caption,
+    caption: head.caption,
     cardPath: relPath,
-    sourceSnapshot: captionData,
+    sourceSnapshot: { topCandidates: top, topMovers, topNews },
     llmMetadata: {
-      source: cap_.source,
-      attempts: cap_.attempts,
-      lintViolations: cap_.lintViolations,
-      rawOutputs: cap_.rawOutputs,
+      source: head.source,
+      attempts: head.attempts,
+      lintViolations: head.lintViolations,
+      rawOutputs: head.rawOutputs,
     },
+    thread: replies,
   }).returning({ id: botPosts.id });
 
-  logger.info({ postId: inserted[0].id, source: cap_.source }, 'morning-brief: drafted');
+  logger.info(
+    { postId: inserted[0].id, source: head.source, threadLength: replies.length },
+    'morning-brief: drafted',
+  );
   return { ok: true, postId: inserted[0].id };
 }
