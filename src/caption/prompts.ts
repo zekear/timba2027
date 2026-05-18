@@ -1,5 +1,5 @@
 export interface CaptionContext {
-  shape: 'morning_brief' | 'market_move' | 'new_poll' | 'hot_news' | 'duelo_crossover';
+  shape: 'morning_brief' | 'market_move' | 'new_poll' | 'hot_news' | 'duelo_crossover' | 'milestone';
   data: Record<string, unknown>;
 }
 
@@ -42,6 +42,7 @@ export function captionPrompt(ctx: CaptionContext): string {
     new_poll: 'nueva encuesta detectada',
     hot_news: 'noticia política de alto impacto',
     duelo_crossover: 'cruce de candidatos en el ranking del mercado presidencial',
+    milestone: 'hito en el mercado presidencial: primera vez desde X',
   }[shape];
 
   const marketType = detectMarketType(shape, data);

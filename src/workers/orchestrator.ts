@@ -12,6 +12,7 @@ import { runMarketMoveWatcher } from '../trigger/watchers/market-move.js';
 import { runNewPollWatcher } from '../trigger/watchers/new-poll.js';
 import { runHotNewsWatcher } from '../trigger/watchers/hot-news.js';
 import { runCrossoverWatcher } from '../trigger/watchers/duelo-crossover.js';
+import { runMilestoneWatcher } from '../trigger/watchers/milestone.js';
 import { runTriggerOrchestrator } from '../trigger/orchestrator.js';
 import { runMorningBrief } from '../trigger/morning-brief.js';
 import { runWeeklyRecap } from '../trigger/weekly-recap.js';
@@ -92,6 +93,9 @@ async function main() {
   // Crossover watcher cada 30 min (overtakes son raros, no vale chequear más seguido)
   cron.schedule('*/30 * * * *', singleflight('crossover-watcher', () =>
     runCrossoverWatcher().then(() => undefined)));
+  // Milestone watcher cada 6h (los precios cambian gradual, no vale chequear más seguido)
+  cron.schedule('0 */6 * * *', singleflight('milestone-watcher', () =>
+    runMilestoneWatcher().then(() => undefined)));
 
   // Trigger orchestrator: cada 2 min consume events y genera drafts
   cron.schedule('*/2 * * * *', singleflight('trigger-orchestrator', () =>

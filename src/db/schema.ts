@@ -173,6 +173,7 @@ export const botPostShapeEnum = pgEnum('bot_post_shape', [
   'hot_news',
   'weekly_recap',
   'duelo_crossover',
+  'milestone',
 ]);
 
 export const botPostStatusEnum = pgEnum('bot_post_status', [
