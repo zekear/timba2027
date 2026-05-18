@@ -33,6 +33,10 @@ const schema = z.object({
   ADMIN_BASIC_AUTH_PASS: z.string().optional(),
   SITE_URL: z.string().url().default('https://timba2027.com'),
   DAILY_PUBLISH_CAP: z.coerce.number().int().positive().default(30),
+  ANIMATED_CARDS: z
+    .string()
+    .default('true')
+    .transform((v) => v === 'true' || v === '1'),
 });
 
 const parsed = schema.safeParse(process.env);

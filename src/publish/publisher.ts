@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { resolve, extname } from 'node:path';
 import { sql } from 'drizzle-orm';
 import { db } from '../db/client.js';
 import { env } from '../lib/env.js';
@@ -43,9 +43,13 @@ interface SchedulableRow {
  * No verifica window ni cap — los chequea quien llama (usado tanto por el
  * cron como por el botón "publish now" del admin).
  */
+function mimeForCardPath(p: string): 'image/png' | 'image/gif' {
+  return extname(p).toLowerCase() === '.gif' ? 'image/gif' : 'image/png';
+}
+
 async function publishRow(row: SchedulableRow): Promise<string> {
   const cardBuf = await readFile(resolve(process.cwd(), row.card_path));
-  const mediaId = await uploadMedia(cardBuf, 'image/png');
+  const mediaId = await uploadMedia(cardBuf, mimeForCardPath(row.card_path));
   const headTweetId = await createTweet({ text: row.caption, mediaIds: [mediaId] });
 
   let prevId = headTweetId;
@@ -54,7 +58,7 @@ async function publishRow(row: SchedulableRow): Promise<string> {
     const mediaIds: string[] = [];
     if (entry.cardPath) {
       const buf = await readFile(resolve(process.cwd(), entry.cardPath));
-      mediaIds.push(await uploadMedia(buf, 'image/png'));
+      mediaIds.push(await uploadMedia(buf, mimeForCardPath(entry.cardPath)));
     }
     prevId = await createTweet({ text: entry.caption, mediaIds, replyToTweetId: prevId });
   }
