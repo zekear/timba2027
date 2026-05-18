@@ -10,7 +10,10 @@ import { env } from '../lib/env.js';
 
 export async function runMorningBrief(): Promise<{ ok: boolean; postId?: number; reason?: string }> {
   const cap = await canPostNow({ now: new Date(), candidateFocus: null });
-  if (!cap.ok) return { ok: false, reason: cap.reason };
+  if (!cap.ok) {
+    logger.info({ reason: cap.reason }, 'morning-brief: skipped');
+    return { ok: false, reason: cap.reason };
+  }
 
   const existing = await db.execute(sql`
     SELECT 1 FROM bot_posts
@@ -20,6 +23,7 @@ export async function runMorningBrief(): Promise<{ ok: boolean; postId?: number;
     LIMIT 1
   `);
   if (existing.rows.length > 0) {
+    logger.info({ reason: 'already_drafted_today' }, 'morning-brief: skipped');
     return { ok: false, reason: 'already_drafted_today' };
   }
 
