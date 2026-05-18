@@ -13,10 +13,13 @@ export interface LintResult {
 }
 
 const NUMBER_RX = /-?\d+(?:[\.,]\d+)?/g;
+// t.co URLs solo existen cuando Twitter las genera al postear. Si aparecen
+// en una caption pre-publish significa que el LLM las alucinó.
+const TCO_URL_RX = /https?:\/\/t\.co\/[A-Za-z0-9]+/i;
 
 export function lintCaption(
   caption: string,
-  allowed: { numbers: number[] },
+  allowed: { numbers: number[]; urls?: string[] },
 ): LintResult {
   const violations: string[] = [];
   const lower = caption.toLowerCase();
@@ -24,6 +27,27 @@ export function lintCaption(
   for (const phrase of FORBIDDEN_PHRASES) {
     if (lower.includes(phrase)) {
       violations.push(`forbidden phrase: ${phrase}`);
+    }
+  }
+
+  // Reject hallucinated t.co URLs (X las genera al publish, no antes).
+  // Excepción: si la URL real provista pasa por t.co (poco común pero
+  // posible si el origen ya está acortado), la dejamos pasar.
+  const tcoMatch = caption.match(TCO_URL_RX);
+  if (tcoMatch) {
+    const url = tcoMatch[0];
+    const allowedHit = (allowed.urls ?? []).some((u) => u === url);
+    if (!allowedHit) violations.push(`hallucinated_tco_url: ${url}`);
+  }
+
+  // Reject URLs no permitidas explícitamente cuando se pasa el allow-list.
+  // Si urls no se pasa, no chequeamos (compat con callers viejos).
+  if (allowed.urls) {
+    const urlMatches = caption.match(/https?:\/\/[^\s)]+/g) ?? [];
+    for (const u of urlMatches) {
+      const cleaned = u.replace(/[.,;:!?]+$/, ''); // trailing punctuation
+      const allowedHit = allowed.urls.some((a) => cleaned === a || cleaned.startsWith(a));
+      if (!allowedHit) violations.push(`unauthorized_url: ${cleaned}`);
     }
   }
 

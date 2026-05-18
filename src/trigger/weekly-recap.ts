@@ -174,7 +174,11 @@ function dayLabel(d: Date): string {
   });
 }
 
-export async function llmTweet(promptBody: string, allowedNumbers: number[]): Promise<string> {
+export async function llmTweet(
+  promptBody: string,
+  allowedNumbers: number[],
+  opts: { allowedUrls?: string[] } = {},
+): Promise<string> {
   const prompt = `${promptBody}
 
 Devolvé EXCLUSIVAMENTE el texto del tweet (sin prefijos, sin comillas).
@@ -182,12 +186,13 @@ Reglas:
 - Máximo 240 caracteres.
 - Solo podés usar números que aparecen en los datos provistos arriba.
 - Tono factual, español rioplatense, sin opinión política.
-- Sin hashtags. Máximo 1 emoji al inicio si la sección lo amerita.`;
+- Sin hashtags. Máximo 1 emoji al inicio si la sección lo amerita.
+- NUNCA inventes URLs. Si necesitás incluir un link, usá EXACTAMENTE el URL provisto en los datos. NO uses URLs cortas (t.co/...) — esas las genera Twitter automáticamente al publicar.`;
 
   for (let i = 0; i < 3; i++) {
     const raw = await llm.classify(prompt, { model: 'haiku' });
     const text = raw.trim().replace(/^["']|["']$/g, '');
-    const lint = lintCaption(text, { numbers: allowedNumbers });
+    const lint = lintCaption(text, { numbers: allowedNumbers, urls: opts.allowedUrls });
     if (lint.ok && text.length > 0 && text.length <= 270) return text;
     logger.debug({ violations: lint.violations, length: text.length, attempt: i }, 'recap: tweet retry');
   }
@@ -302,8 +307,9 @@ ${data.hotNews.length} noticia${data.hotNews.length === 1 ? '' : 's'} top. Resum
 Datos:
 ${newsText}
 
-Estructura: "Noticias: [headline 1 acortada] · [headline 2] · [headline 3]." Termina con "${top1.url}" (X auto-acorta a t.co, ocupa 23 chars).`,
+Estructura: "Noticias: [headline 1 acortada] · [headline 2] · [headline 3]." Termina con la URL: ${top1.url}`,
       allowed4,
+      { allowedUrls: [top1.url] },
     );
     replies.push({ caption: cap });
   }
