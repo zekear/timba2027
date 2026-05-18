@@ -1,4 +1,4 @@
-import type { MarketMoveEvent, NewPollEvent, HotNewsEvent, CrossoverEvent } from '../trigger/types.js';
+import type { MarketMoveEvent, NewPollEvent, HotNewsEvent, CrossoverEvent, MilestoneEvent } from '../trigger/types.js';
 
 /**
  * Devuelve un label legible para el mercado (basado en marketSlug).
@@ -27,10 +27,16 @@ function isInflationRange(label: string): boolean {
 }
 
 export function fallbackCaption(
-  shape: 'morning_brief' | 'market_move' | 'new_poll' | 'hot_news' | 'duelo_crossover',
+  shape: 'morning_brief' | 'market_move' | 'new_poll' | 'hot_news' | 'duelo_crossover' | 'milestone',
   data: Record<string, unknown>,
 ): string {
   switch (shape) {
+    case 'milestone': {
+      const e = data as unknown as MilestoneEvent;
+      const sideText = e.direction === 'above' ? `arriba del ${e.threshold}%` : `abajo del ${e.threshold}%`;
+      const lastSide = e.direction === 'above' ? `abajo` : `arriba`;
+      return `📍 Polymarket: ${e.candidate} ${sideText} por primera vez en ${e.daysSince} días (última vez ${lastSide}). Ahora ${e.pctNow.toFixed(1)}%.`;
+    }
     case 'duelo_crossover': {
       const e = data as unknown as CrossoverEvent;
       const sign = (x: number): string => (x >= 0 ? '+' : '');

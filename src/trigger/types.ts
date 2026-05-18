@@ -79,5 +79,23 @@ export const crossoverEventSchema = z.object({
 });
 export type CrossoverEvent = z.infer<typeof crossoverEventSchema>;
 
-export const EVENT_TYPES = ['MARKET_MOVE', 'NEW_POLL', 'HOT_NEWS', 'CROSSOVER'] as const;
+/**
+ * Un MILESTONE event captura cuando un candidato cruza un threshold redondo
+ * (5%, 10%, ..., 50%) por primera vez en N días. Es "the first time since..."
+ *
+ * - threshold: el % cruzado (entero, 5/10/15/.../50)
+ * - direction: 'above' (subió cruzando) o 'below' (bajó cruzando)
+ * - daysSince: hace cuántos días el candidato estuvo del otro lado del
+ *   threshold por última vez. Mayor = más memorable.
+ */
+export const milestoneEventSchema = z.object({
+  candidate: z.string(),
+  pctNow: z.number(),
+  threshold: z.number().int(),
+  direction: z.enum(['above', 'below']),
+  daysSince: z.number().int().positive(),
+});
+export type MilestoneEvent = z.infer<typeof milestoneEventSchema>;
+
+export const EVENT_TYPES = ['MARKET_MOVE', 'NEW_POLL', 'HOT_NEWS', 'CROSSOVER', 'MILESTONE'] as const;
 export type EventType = typeof EVENT_TYPES[number];
