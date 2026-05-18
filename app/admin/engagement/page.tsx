@@ -2,6 +2,12 @@ import { sql } from 'drizzle-orm';
 import { extname } from 'node:path';
 import Link from 'next/link';
 import { db } from '@/db/client';
+import {
+  EngagementLineChart,
+  ImpressionsChart,
+  PostsPerDayChart,
+  type DayPoint,
+} from '../components/EngagementChart';
 
 export const dynamic = 'force-dynamic';
 
@@ -80,6 +86,28 @@ export default async function EngagementDashboard() {
   const animated = rows.filter((r) => extname(r.card_path).toLowerCase() === '.gif');
   const stat = rows.filter((r) => extname(r.card_path).toLowerCase() !== '.gif');
 
+  // Métricas por día (agrupar por published_at en ARG)
+  const dayMap = new Map<string, Row[]>();
+  for (const r of rows) {
+    const d = new Date(r.published_at);
+    // YYYY-MM-DD en ARG
+    const key = d
+      .toLocaleDateString('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' });
+    if (!dayMap.has(key)) dayMap.set(key, []);
+    dayMap.get(key)!.push(r);
+  }
+  const daySeries: DayPoint[] = Array.from(dayMap.entries())
+    .map(([date, items]) => ({
+      date,
+      posts: items.length,
+      avgLikes: mAvg(items, 'like_count'),
+      avgRTs: mAvg(items, 'retweet_count'),
+      avgImpressions: mAvg(items, 'impression_count'),
+      totalLikes: mTotal(items, 'like_count'),
+      totalImpressions: mTotal(items, 'impression_count'),
+    }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+
   return (
     <main className="max-w-5xl mx-auto p-8">
       <header className="border-b-2 border-ink pb-4 mb-6">
@@ -105,6 +133,31 @@ export default async function EngagementDashboard() {
             <Stat label="Replies" value={totalReplies} />
             <Stat label="Impressions" value={totalImpr} />
           </section>
+
+          {/* Evolución por día */}
+          {daySeries.length >= 2 && (
+            <section className="mb-10">
+              <h2 className="font-mono text-xs uppercase tracking-wide font-bold border-b-2 border-ink pb-2 mb-4">
+                Evolución por día (promedio por post)
+              </h2>
+              <div className="mb-6">
+                <div className="font-mono text-xs uppercase text-caption mb-1">Likes y RTs</div>
+                <EngagementLineChart data={daySeries} />
+              </div>
+              <div className="mb-6">
+                <div className="font-mono text-xs uppercase text-caption mb-1">Impressions</div>
+                <ImpressionsChart data={daySeries} />
+              </div>
+              <div>
+                <div className="font-mono text-xs uppercase text-caption mb-1">Volumen — posts publicados</div>
+                <PostsPerDayChart data={daySeries} />
+              </div>
+              <p className="font-mono text-xs text-caption mt-4">
+                Promedios por post. Para ver impacto de un cambio: comparar la curva antes vs después
+                del día en que activaste la feature. Cada barra del último gráfico es un día calendario.
+              </p>
+            </section>
+          )}
 
           {/* A/B animadas vs estáticas */}
           {animated.length > 0 && stat.length > 0 && (
