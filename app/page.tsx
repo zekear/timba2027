@@ -16,16 +16,21 @@ interface CandidateRow {
   sparkline: number[];
 }
 
-async function getCurrentTop5(): Promise<CandidateRow[]> {
+async function getCurrentTop5(): Promise<{ rows: CandidateRow[]; lastUpdated: Date | null }> {
   const r = await db.execute(sql`
-    SELECT DISTINCT ON (candidate) candidate, (price::float * 100) AS pct
+    SELECT DISTINCT ON (candidate) candidate, (price::float * 100) AS pct, ts
     FROM market_prices mp JOIN markets m ON m.id = mp.market_id
     WHERE m.slug = 'argentina-presidential-election-winner'
     ORDER BY candidate, ts DESC
   `);
-  const rows = r.rows as Array<{ candidate: string; pct: number }>;
+  const rows = r.rows as Array<{ candidate: string; pct: number; ts: Date }>;
   const top5 = rows.sort((a, b) => b.pct - a.pct).slice(0, 5);
-  if (top5.length === 0) return [];
+  if (top5.length === 0) return { rows: [], lastUpdated: null };
+
+  const lastUpdated = rows.reduce<Date | null>((acc, row) => {
+    const t = new Date(row.ts);
+    return !acc || t > acc ? t : acc;
+  }, null);
 
   // Histórico 7d: 1 muestra por hora, por candidato del top 5.
   // Pasamos el array como literal PG ('{a,b,c}') porque drizzle expande
@@ -51,18 +56,35 @@ async function getCurrentTop5(): Promise<CandidateRow[]> {
     byCandidate.set(row.candidate, arr);
   }
 
-  return top5.map((c) => {
+  const out: CandidateRow[] = top5.map((c) => {
     const series = byCandidate.get(c.candidate) ?? [];
     const delta7d = series.length >= 2 ? c.pct - series[0] : null;
-    return { ...c, delta7d, sparkline: series };
+    return { candidate: c.candidate, pct: c.pct, delta7d, sparkline: series };
   });
+  return { rows: out, lastUpdated };
+}
+
+function formatLastUpdated(d: Date): string {
+  const time = d.toLocaleTimeString('es-AR', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'America/Argentina/Buenos_Aires',
+  });
+  const day = d.toLocaleDateString('es-AR', {
+    day: '2-digit',
+    month: 'short',
+    timeZone: 'America/Argentina/Buenos_Aires',
+  });
+  return `${day} · ${time} ARG`;
 }
 
 export default async function Home() {
-  const [top5, recentPosts] = await Promise.all([
+  const [top5Result, recentPosts] = await Promise.all([
     getCurrentTop5(),
     db.select().from(botPosts).where(eq(botPosts.status, 'published')).orderBy(desc(botPosts.publishedAt)).limit(6),
   ]);
+  const top5 = top5Result.rows;
+  const lastUpdated = top5Result.lastUpdated;
 
   const maxPct = Math.max(...top5.map((c) => c.pct), 1);
 
@@ -85,13 +107,20 @@ export default async function Home() {
 
         {top5.length > 0 && (
           <section className="mb-16">
-            <div className="flex items-baseline justify-between border-b-2 border-ink pb-2 mb-4">
+            <div className="flex items-baseline justify-between border-b-2 border-ink pb-2 mb-4 gap-4">
               <h2 className="font-mono text-xs uppercase tracking-wide font-bold">
                 Polymarket — top 5 ahora
               </h2>
-              <Link href="/2027" className="font-mono text-xs uppercase tracking-wide text-accent underline">
-                ver timeline →
-              </Link>
+              <div className="flex items-baseline gap-4 shrink-0">
+                {lastUpdated && (
+                  <span className="font-mono text-xs uppercase tracking-wide text-caption hidden sm:inline">
+                    act. {formatLastUpdated(lastUpdated)}
+                  </span>
+                )}
+                <Link href="/2027" className="font-mono text-xs uppercase tracking-wide text-accent underline">
+                  ver timeline →
+                </Link>
+              </div>
             </div>
             <div className="space-y-1">
               {top5.map((c) => (
