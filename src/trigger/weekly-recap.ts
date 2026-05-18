@@ -174,7 +174,7 @@ function dayLabel(d: Date): string {
   });
 }
 
-async function llmTweet(promptBody: string, allowedNumbers: number[]): Promise<string> {
+export async function llmTweet(promptBody: string, allowedNumbers: number[]): Promise<string> {
   const prompt = `${promptBody}
 
 Devolvé EXCLUSIVAMENTE el texto del tweet (sin prefijos, sin comillas).
