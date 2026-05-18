@@ -100,7 +100,10 @@ export async function uploadMedia(
   if (!id) {
     throw new Error(`X uploadMedia returned no id: ${JSON.stringify(json).slice(0, 300)}`);
   }
-  logger.debug({ mediaId: id, bytes: buffer.length }, 'x: media uploaded');
+  logger.info(
+    { endpoint: 'media/upload', cost: 0.015, type: 'write', mediaId: id, bytes: buffer.length },
+    'x-api: call',
+  );
   return id;
 }
 
@@ -141,6 +144,9 @@ export async function createTweet(opts: {
   if (!id) {
     throw new Error(`X createTweet returned no id: ${JSON.stringify(json).slice(0, 300)}`);
   }
-  logger.info({ tweetId: id, mediaCount: opts.mediaIds.length }, 'x: tweet created');
+  logger.info(
+    { endpoint: 'tweets', cost: 0.015, type: 'write', tweetId: id, mediaCount: opts.mediaIds.length },
+    'x-api: call',
+  );
   return id;
 }

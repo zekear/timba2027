@@ -97,10 +97,9 @@ async function main() {
   // Milestone watcher cada 6h (los precios cambian gradual, no vale chequear más seguido)
   cron.schedule('0 */6 * * *', singleflight('milestone-watcher', () =>
     runMilestoneWatcher().then(() => undefined)));
-  // Engagement metrics collector 2 veces por día (12:00 y 23:00 UTC = 09 y
-  // 20 ARG). 1 read op por run (bulk). Bajado de 1/h para reducir costo
-  // mientras el volumen es chico; subir frecuencia cuando engagement crezca.
-  cron.schedule('0 12,23 * * *', singleflight('metrics-collector', () =>
+  // Engagement metrics collector 1 vez por día (12:00 UTC = 09 ARG, post
+  // morning-brief). 1 read op por run (bulk endpoint, hasta 100 tweets).
+  cron.schedule('0 12 * * *', singleflight('metrics-collector', () =>
     runMetricsCollector().then(() => undefined)));
 
   // Trigger orchestrator: cada 2 min consume events y genera drafts
