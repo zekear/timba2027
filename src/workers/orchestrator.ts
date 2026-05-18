@@ -13,6 +13,7 @@ import { runNewPollWatcher } from '../trigger/watchers/new-poll.js';
 import { runHotNewsWatcher } from '../trigger/watchers/hot-news.js';
 import { runCrossoverWatcher } from '../trigger/watchers/duelo-crossover.js';
 import { runMilestoneWatcher } from '../trigger/watchers/milestone.js';
+import { runMetricsCollector } from './metrics-collector.js';
 import { runTriggerOrchestrator } from '../trigger/orchestrator.js';
 import { runMorningBrief } from '../trigger/morning-brief.js';
 import { runWeeklyRecap } from '../trigger/weekly-recap.js';
@@ -96,6 +97,9 @@ async function main() {
   // Milestone watcher cada 6h (los precios cambian gradual, no vale chequear más seguido)
   cron.schedule('0 */6 * * *', singleflight('milestone-watcher', () =>
     runMilestoneWatcher().then(() => undefined)));
+  // Engagement metrics collector cada hora — 1 read op por run (bulk).
+  cron.schedule('0 * * * *', singleflight('metrics-collector', () =>
+    runMetricsCollector().then(() => undefined)));
 
   // Trigger orchestrator: cada 2 min consume events y genera drafts
   cron.schedule('*/2 * * * *', singleflight('trigger-orchestrator', () =>
