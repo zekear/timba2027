@@ -1,6 +1,9 @@
-import { sql } from 'drizzle-orm';
+import { sql, desc, eq, and, inArray } from 'drizzle-orm';
+import { basename } from 'node:path';
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { db } from '../../src/db/client.js';
+import { botPosts } from '../../src/db/schema.js';
 import { Header } from '../components/public/Header.js';
 import { Footer } from '../components/public/Footer.js';
 import { MarketChart, type ChartPoint } from '../components/public/MarketChart.js';
@@ -8,10 +11,23 @@ import { BarRow } from '../components/public/BarRow.js';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata = {
-  title: '2027 — Mercado de elecciones presidenciales',
-  description: 'Top 5 candidatos en Polymarket y timeline de últimos 30 días.',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const title = '2027 — Mercado de elecciones presidenciales';
+  const description = 'Top 5 candidatos en Polymarket y timeline de últimos 30 días.';
+  // OG: última card de morning_brief o market_move (snapshot reciente del mercado).
+  const [latest] = await db
+    .select({ cardPath: botPosts.cardPath })
+    .from(botPosts)
+    .where(and(eq(botPosts.status, 'published'), inArray(botPosts.shape, ['morning_brief', 'market_move'])))
+    .orderBy(desc(botPosts.publishedAt))
+    .limit(1);
+  const ogImage = latest ? `/api/cards/${encodeURIComponent(basename(latest.cardPath))}` : '/og-default.png';
+  return {
+    title,
+    description,
+    openGraph: { title, description, images: [ogImage] },
+  };
+}
 
 async function getTimeSeriesData(): Promise<{ data: ChartPoint[]; candidates: string[] }> {
   const topRes = await db.execute(sql`
