@@ -1,4 +1,5 @@
-import { sql, desc } from 'drizzle-orm';
+import { sql, desc, eq, and } from 'drizzle-orm';
+import { basename } from 'node:path';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
@@ -16,9 +17,21 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { candidate } = await params;
   const real = (await findCandidateByName(candidate)) ?? slugToCandidate(candidate);
+  const title = `${real} — Polymarket 2027`;
+  const description = `Cotización en Polymarket y posts del bot sobre ${real}.`;
+  // OG: usar la card del último post publicado con focus en este candidato.
+  // Fallback al banner default si nunca tuvimos posts sobre el candidato.
+  const [latest] = await db
+    .select({ cardPath: botPosts.cardPath })
+    .from(botPosts)
+    .where(and(eq(botPosts.status, 'published'), eq(botPosts.candidateFocus, real)))
+    .orderBy(desc(botPosts.publishedAt))
+    .limit(1);
+  const ogImage = latest ? `/api/cards/${encodeURIComponent(basename(latest.cardPath))}` : '/og-default.png';
   return {
-    title: `${real} — Polymarket 2027`,
-    description: `Cotización en Polymarket y posts del bot sobre ${real}.`,
+    title,
+    description,
+    openGraph: { title, description, images: [ogImage] },
   };
 }
 
