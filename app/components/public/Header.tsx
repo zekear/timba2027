@@ -10,6 +10,7 @@ export function Header() {
         </Link>
         <nav className="font-mono text-xs uppercase tracking-wide text-pageInk flex gap-4 ml-auto">
           <Link href="/2027" className="hover:text-accent">2027</Link>
+          <Link href={'/momentos' as never} className="hover:text-accent">momentos</Link>
           <Link href={'/posts' as never} className="hover:text-accent">posts</Link>
         </nav>
       </div>
