@@ -154,15 +154,16 @@ Estructura sugerida: "Últimas 24h: [candidato 1] [delta] (a [pct]%); [candidato
   if (topNews) {
     const cap = await llmTweet(
       `Tweet 3 del thread "Morning brief". Sección: noticia política caliente del día.
-Una noticia destacada de las últimas 24h (relevancia ${topNews.relevance.toFixed(2)}). Resumí en 1 frase corta y termina con el link.
+Una noticia destacada de las últimas 24h (relevancia ${topNews.relevance.toFixed(2)}). Resumí en 1 frase corta y al final incluí la URL EXACTAMENTE como te la doy.
 
 Datos:
 - Fuente: ${topNews.source}
 - Headline: ${topNews.headline}
 - URL: ${topNews.url}
 
-Estructura: "[Resumen 1 frase corta]. ${topNews.url}" — el link se acorta a t.co (23 chars).`,
+Estructura: "[Resumen 1 frase corta]. <URL provista>"`,
       collectNumbers({ relevance: topNews.relevance }),
+      { allowedUrls: [topNews.url] },
     );
     replies.push({ caption: cap });
   }
