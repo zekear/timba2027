@@ -24,25 +24,38 @@ export interface GifOpts {
   height?: number;
   /** Delay entre frames en ms. Default 80ms (~12fps). */
   frameDelayMs?: number;
+  /**
+   * Delay del último frame en ms. Default 2500ms.
+   * Twitter/X siempre loopea GIFs; un delay largo en el último frame
+   * crea una pausa visual antes de que la animación se repita.
+   */
+  lastFrameDelayMs?: number;
 }
 
 /**
  * Renderiza una serie de CardElements como GIF animado.
  * Devuelve el path absoluto y relativo del archivo escrito.
+ *
+ * Default 1200×675 (Twitter card large), mismo tamaño que renderToPng,
+ * para que cards diseñadas con tokens fijos (BarChart con MAX 600px etc.)
+ * no se desborden.
  */
 export async function renderFramesToGif(
   frames: CardElement[],
   filenameWithoutExt: string,
   opts: GifOpts = {},
 ): Promise<{ absPath: string; relPath: string }> {
-  const width = opts.width ?? 800;
-  const height = opts.height ?? 450;
+  const width = opts.width ?? 1200;
+  const height = opts.height ?? 675;
   const delay = opts.frameDelayMs ?? 80;
+  const lastDelay = opts.lastFrameDelayMs ?? 2500;
 
   const fonts = loadFonts() as unknown as Parameters<typeof satori>[1]['fonts'];
   const gif = GIFEncoder();
 
-  for (const frame of frames) {
+  for (let i = 0; i < frames.length; i++) {
+    const frame = frames[i]!;
+    const isLast = i === frames.length - 1;
     const svg = await satori(frame as unknown as Parameters<typeof satori>[0], { width, height, fonts });
     const png = new Resvg(svg, { fitTo: { mode: 'width', value: width } }).render().asPng();
     // Sharp → raw RGBA
@@ -53,7 +66,10 @@ export async function renderFramesToGif(
     const rgba = new Uint8ClampedArray(data.buffer, data.byteOffset, data.byteLength);
     const palette = quantize(rgba, 256);
     const indexed = applyPalette(rgba, palette);
-    gif.writeFrame(indexed, width, height, { palette, delay });
+    gif.writeFrame(indexed, width, height, {
+      palette,
+      delay: isLast ? lastDelay : delay,
+    });
   }
   gif.finish();
   const buffer = Buffer.from(gif.bytes());

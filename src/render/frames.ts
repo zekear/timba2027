@@ -12,8 +12,8 @@ import { dueloCrossoverCard } from './cards/duelo-crossover.js';
 import { morningBriefCard } from './cards/morning-brief.js';
 import type { MarketMoveEvent, CrossoverEvent } from '../trigger/types.js';
 
-const TOTAL_FRAMES = 16;
-const HOLD_FRAMES = 4; // frames "congelados" al final para que el lector vea el resultado
+const TOTAL_FRAMES = 13;
+const HOLD_FRAMES = 1; // un solo frame final; el "hold" real lo hace lastFrameDelayMs en gif.ts
 
 function easeOutCubic(t: number): number {
   return 1 - Math.pow(1 - t, 3);
