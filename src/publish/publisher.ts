@@ -27,6 +27,32 @@ async function isKillSwitchActive(): Promise<boolean> {
 }
 
 const MAX_PER_RUN = 3;
+// Tras N fallos consecutivos publicando el mismo post, marcarlo como killed
+// para evitar retry loops (e.g. media inválido, URL alucinada). El usuario
+// puede investigar el post y, si tiene fix, resetearlo manualmente.
+const MAX_PUBLISH_FAILURES = 3;
+
+/**
+ * Registra un fallo de publicación para el post. Si supera MAX_PUBLISH_FAILURES,
+ * marca el post como killed automáticamente.
+ */
+async function recordPublishFailure(postId: number, reason: string): Promise<void> {
+  const rows = await db.execute(sql`
+    UPDATE bot_posts
+    SET publish_failures = jsonb_build_object(
+      'count', COALESCE((publish_failures->>'count')::int, 0) + 1,
+      'lastAt', NOW()::text,
+      'lastReason', ${reason.slice(0, 500)}
+    )
+    WHERE id = ${postId}
+    RETURNING (publish_failures->>'count')::int AS count
+  `);
+  const count = (rows.rows[0] as { count: number } | undefined)?.count ?? 0;
+  if (count >= MAX_PUBLISH_FAILURES) {
+    await db.execute(sql`UPDATE bot_posts SET status = 'killed' WHERE id = ${postId}`);
+    logger.warn({ postId, count, reason: reason.slice(0, 200) }, 'publisher: auto-killed after max failures');
+  }
+}
 
 type ThreadEntry = { caption: string; cardPath?: string };
 
@@ -109,6 +135,7 @@ export async function publishOneNow(
     return { ok: true, xPostId };
   } catch (err) {
     logger.error({ postId, err: (err as Error).message }, 'publisher: publishOneNow failed');
+    await recordPublishFailure(postId, (err as Error).message);
     return { ok: false, reason: (err as Error).message };
   }
 }
@@ -171,6 +198,7 @@ export async function runPublisher(): Promise<PublisherStats> {
         { postId: row.id, err: (err as Error).message },
         'publisher: failed to publish',
       );
+      await recordPublishFailure(row.id, (err as Error).message);
     }
   }
 

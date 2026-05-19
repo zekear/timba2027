@@ -1,0 +1,1 @@
+ALTER TABLE "bot_posts" ADD COLUMN "publish_failures" jsonb;
